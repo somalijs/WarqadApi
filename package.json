@@ -1,0 +1,54 @@
+{
+  "name": "warqad_application",
+  "version": "0.0.0",
+  "description": "warqad applications center",
+  "keywords": [
+    "warqad"
+  ],
+  "license": "ISC",
+  "author": "abdaiziz abdullahi (maoo abdalla)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "server": "tsc --noEmit && tsx --watch backend/src/server.ts",
+    "start": "node backend/dist/server.js",
+    "frontend": "npm run dev --prefix frontend",
+
+    "build-client": "cd frontend && npm install && npm run build",
+    "build": "tsc  && npm run build-client",
+    "dev": "concurrently \"npm run server\"  \"npm run frontend\""
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "antd": "^5.27.4",
+    "axios": "^1.12.2",
+    "bcrypt": "^6.0.0",
+    "colors": "^1.4.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-async-handler": "^1.2.0",
+    "firebase-admin": "^13.6.0",
+    "jsonwebtoken": "^9.0.2",
+    "moment-timezone": "^0.6.0",
+    "mongoose": "^8.18.3",
+    "multer": "^2.0.2",
+    "react-hook-form": "^7.64.0",
+    "resend": "^6.1.1",
+    "uuid": "^13.0.0",
+    "zod": "^4.1.11",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.6.0",
+    "tsx": "^4.20.6",
+    "typecript": "^0.0.1-security"
+  }
+}

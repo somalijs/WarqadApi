@@ -13,9 +13,8 @@
     "server": "tsc --noEmit && tsx --watch backend/src/server.ts",
     "start": "node backend/dist/server.js",
     "frontend": "npm run dev --prefix frontend",
-
-   "build-client": "cd frontend && npm install && npm run build",
-    "build": "tsc  && npm run build-client",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+  "build-client": "npm --prefix frontend run build",
     "dev": "concurrently \"npm run server\"  \"npm run frontend\""
   },
   "dependencies": {
@@ -49,6 +48,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.6.0",
     "tsx": "^4.20.6",
-    "typecript": "^0.0.1-security"
+    "typecript": "^0.0.1-security",
+    "typescript": "^5.9.3"
   }
 }

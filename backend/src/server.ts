@@ -22,7 +22,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
 const corsOptions = {
   credentials: true,
-  origin: function (origin, callback) {
+  origin: function (origin: string, callback: any) {
     // allow same-origin or non-browser requests like curl
     if (!origin) return callback(null, true);
 
@@ -35,9 +35,9 @@ const corsOptions = {
 };
 
 // use CORS for all requests
-app.use(cors(corsOptions));
+app.use(cors(corsOptions as cors.CorsOptions));
 
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions as cors.CorsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);

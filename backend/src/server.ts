@@ -37,7 +37,7 @@ const corsOptions = {
 // use CORS for all requests
 app.use(cors(corsOptions as cors.CorsOptions));
 
-app.options('*', cors(corsOptions as cors.CorsOptions));
+app.options('/*', cors(corsOptions as cors.CorsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);

@@ -18,10 +18,12 @@ await connectDB();
 
 const app = express();
 app.use(cookieParser());
+const allowedValues = process.env.ALLOWED_ORIGINS?.split(',') || [];
+
 app.use(
   cors({
-    origin: true, // allow any origin
-    credentials: true, // allow cookies
+    credentials: true,
+    origin: allowedValues,
   })
 );
 app.use(express.json());

@@ -20,21 +20,25 @@ const app = express();
 app.use(cookieParser());
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
-app.use(
-  cors({
-    credentials: true,
-    origin: function (origin, callback) {
-      // allow requests with no origin (like curl or same-origin)
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  credentials: true,
+  origin: function (origin, callback) {
+    // allow same-origin or non-browser requests like curl
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true); // origin allowed
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-  })
-);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+};
+
+// use CORS for all requests
+app.use(cors(corsOptions));
+
+// handle preflight OPTIONS requests
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);

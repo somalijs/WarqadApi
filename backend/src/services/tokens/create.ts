@@ -20,6 +20,8 @@ const createToken = async ({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    domain:
+      process.env.NODE_ENV === 'production' ? process.env.DOMAIN : undefined,
     maxAge: maxAge,
   });
   return token;

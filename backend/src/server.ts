@@ -22,6 +22,7 @@ app.use(
   cors({
     origin: 'https://host.warqad.com', // allow any origin
     credentials: true, // allow cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   })
 );
 app.use(express.json());

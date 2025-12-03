@@ -11,6 +11,11 @@ const getToken = async <T extends object & { decoded: string }>({
   throwError = false,
 }: GetTokenParam): Promise<T> => {
   const token = req.cookies[name];
+  console.log({
+    name: name,
+    token: token,
+    cookies: req.cookies,
+  });
   if (!token && throwError) {
     throw new Error('Keys are missing');
   }

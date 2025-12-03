@@ -23,6 +23,8 @@ const EmailLogin = expressAsyncHandler(
         name: cookieName,
         decoded: `${login.dbName},${login._id.toString()}`,
       });
+      const token = req.cookies[cookieName];
+      console.log('token', token);
       res.status(200).json({
         success: true,
         message: 'User logged in successfully',

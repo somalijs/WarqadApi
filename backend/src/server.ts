@@ -18,21 +18,9 @@ await connectDB();
 
 const app = express();
 app.use(cookieParser());
-const allowedValues = process.env.ALLOWED_ORIGINS?.split(',') || [];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
-app.use(
-  cors({
-    credentials: true,
-    origin: allowedValues,
-  })
-);
-app.options(
-  '/api/{*any}', // instead of '*'
-  cors({
-    origin: 'https://host.warqad.com',
-    credentials: true,
-  })
-);
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);

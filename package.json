@@ -14,7 +14,7 @@
     "start": "node backend/dist/server.js",
     "frontend": "npm run dev --prefix frontend",
 
-    "build-client": "cd frontend && npm install && npm run build",
+   "build-client": "cd frontend && npm install && npm run build",
     "build": "tsc  && npm run build-client",
     "dev": "concurrently \"npm run server\"  \"npm run frontend\""
   },

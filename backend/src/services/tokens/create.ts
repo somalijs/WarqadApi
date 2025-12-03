@@ -16,9 +16,10 @@ const createToken = async ({
   });
   // Always httpOnly for security; secure only in production
   res.cookie(name, token, {
+    path: '/',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: maxAge,
   });
   return token;

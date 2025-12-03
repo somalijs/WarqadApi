@@ -17,10 +17,11 @@ const createToken = async ({
   // Always httpOnly for security; secure only in production
   res.cookie(name, token, {
     path: '/',
-    domain: '.warqad.com',
-    httpOnly: true,
-    secure: true,
-    sameSite: 'None',
+    domain:
+      process.env.NODE_ENV === 'production' ? process.env.DOMAIN : undefined,
+    httpOnly: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   } as any);
   return token;

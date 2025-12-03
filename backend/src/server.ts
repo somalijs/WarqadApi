@@ -18,26 +18,12 @@ await connectDB();
 
 const app = express();
 app.use(cookieParser());
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
-
-const corsOptions = {
-  credentials: true,
-  origin: function (origin: string, callback: any) {
-    // allow same-origin or non-browser requests like curl
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-};
-
-// use CORS for all requests
-app.use(cors(corsOptions as cors.CorsOptions));
-
-app.options('/*', cors(corsOptions as cors.CorsOptions));
+app.use(
+  cors({
+    origin: 'https://host.warqad.com', // allow any origin
+    credentials: true, // allow cookies
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);

@@ -18,8 +18,8 @@ export default function SignInForm() {
   const form = useForm<schemaType>({
     resolver: zodResolver(schema),
     defaultValues: {
-      email: 'support@warqad.com',
-      password: '826314',
+      // email: 'support@warqad.com',
+      // password: '826314',
     },
   });
   const [isLoading, setIsLoading] = useState(false);

@@ -18,12 +18,21 @@ await connectDB();
 
 const app = express();
 app.use(cookieParser());
-const allowedValues = process.env.ALLOWED_ORIGINS?.split(',') || [];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
 app.use(
   cors({
     credentials: true,
-    origin: allowedValues,
+    origin: function (origin, callback) {
+      // allow requests with no origin (like curl or same-origin)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true); // origin allowed
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
   })
 );
 app.use(express.json());

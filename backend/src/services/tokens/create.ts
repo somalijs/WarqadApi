@@ -17,7 +17,7 @@ const createToken = async ({
   // Always httpOnly for security; secure only in production
   res.cookie(name, token, {
     path: '/',
-    domain: process.env.DOMAIN,
+    domain: '.warqad.com',
     httpOnly: true,
     secure: true,
     sameSite: 'None',

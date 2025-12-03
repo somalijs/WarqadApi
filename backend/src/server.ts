@@ -26,6 +26,13 @@ app.use(
     origin: allowedValues,
   })
 );
+app.options(
+  '/api/{*any}', // instead of '*'
+  cors({
+    origin: 'https://host.warqad.com',
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);

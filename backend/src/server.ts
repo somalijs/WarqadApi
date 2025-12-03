@@ -18,11 +18,12 @@ await connectDB();
 
 const app = express();
 app.use(cookieParser());
+const allowedValues = process.env.ALLOWED_ORIGINS?.split(',') || [];
+
 app.use(
   cors({
-    origin: 'https://host.warqad.com', // allow any origin
-    credentials: true, // allow cookies
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+    origin: allowedValues,
   })
 );
 app.use(express.json());

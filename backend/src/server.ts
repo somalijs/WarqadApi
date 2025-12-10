@@ -18,9 +18,27 @@ await connectDB();
 
 const app = express();
 app.use(cookieParser());
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+// Example: 'warqad.com'
+const mainDomain = 'warqad.com';
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like Postman or server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Allow the main domain and all subdomains
+      const regex = new RegExp(`^https?://([a-zA-Z0-9-]+\\.)*${mainDomain}$`);
+      if (regex.test(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);

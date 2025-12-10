@@ -19,7 +19,7 @@ await connectDB();
 const app = express();
 app.use(cookieParser());
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
-
+console.log(allowedOrigins);
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

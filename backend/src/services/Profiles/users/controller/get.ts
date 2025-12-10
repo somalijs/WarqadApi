@@ -35,9 +35,6 @@ const getUsers = async ({
     },
     {
       $addFields: {
-        phoneNumber: {
-          $concat: ['$phone.dialCode', '$phone.number'],
-        },
         names: {
           $concat: ['$name', ' ', '$surname'],
         },

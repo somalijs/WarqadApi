@@ -40,9 +40,7 @@ const SendUserPasskeyToken = async ({
   const sendEmail = await Emails.passwodToken({
     name: `${user.name} ${user.surname}`,
     email: user.email,
-    resetLink: `${process.env.FRONTEND_URL}/reset-password?token=${
-      pass.token
-    }&email=${user.email}&app=${isExist.app.toString()}`,
+    resetLink: `https://${app?.host}${process.env.DOMAIN}/reset-password?token=${pass.token}&email=${user.email}`,
     subject: 'Password Reset',
     company: app?.name,
     title: 'Password Reset Token',

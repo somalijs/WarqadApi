@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
 import mongoose from 'mongoose';
+import { AppDocument } from '../models/app.js';
 
 type profile = {
   id?: mongoose.Types.ObjectId;
@@ -30,6 +31,7 @@ type profile = {
     isActive?: boolean;
     status?: string;
   };
+  appData?: AppDocument;
   stores?: any[];
 };
 export type ExpressRequest = Request & profile;

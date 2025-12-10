@@ -1,14 +1,17 @@
 import { v4 as uuid } from 'uuid';
 import bucket from '../../../config/firebase-admin.js';
+import sharp from 'sharp';
 
 export async function uploadFile({
   file,
   folder = 'unknown',
   name,
+  resize,
 }: {
   name?: string;
   file: Express.Multer.File;
   folder?: string;
+  resize?: boolean;
 }) {
   const extension = file.originalname.split('.').pop();
   let fileName: string;
@@ -24,7 +27,13 @@ export async function uploadFile({
   console.log(`Uploading ${file.originalname}: started`);
 
   try {
-    await fileRef.save(file.buffer, {
+    let fileData = file.buffer;
+    if (resize) {
+      // Resize the image to 1024x768 using Sharp
+      fileData = await sharp(file.buffer).resize(1024, 768).toBuffer();
+    }
+
+    await fileRef.save(fileData, {
       resumable: false, // no chunk tracking needed
       contentType: file.mimetype,
 

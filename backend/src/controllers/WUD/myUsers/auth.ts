@@ -37,7 +37,7 @@ const EmailLogin = expressAsyncHandler(
   }
 );
 const logout = async (_req: ExpressRequest, res: ExpressResponse) => {
-  deleteToken(res, 'authToken');
+  await deleteToken(res, 'authToken');
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 

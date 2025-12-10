@@ -14,7 +14,7 @@ const schema = z.object({
 const createPackage = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
     const { type } = schema.parse(req.params);
-
+    const { subType } = req.body;
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -28,6 +28,7 @@ const createPackage = expressAsyncHandler(
             session,
             id: data._id,
             name: data.name,
+            resize: subType === 'hotel',
           });
           resData = datas;
           break;

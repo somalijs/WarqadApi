@@ -28,7 +28,14 @@ export type DocumentUser = HydratedDocument<UserFields, ProfileMethods>;
 // 4️⃣ Optional: a creation type for DTOs or API inputs
 export type UserCreationDocument = Pick<
   UserFields,
-  'name' | 'surname' | 'email' | 'phone' | 'role' | 'sex' | 'app'
+  | 'name'
+  | 'surname'
+  | 'email'
+  | 'phone'
+  | 'role'
+  | 'sex'
+  | 'app'
+  | 'phoneNumber'
 >;
 
 // 5️⃣ Get model for a specific DB instance

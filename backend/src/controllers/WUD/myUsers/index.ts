@@ -11,6 +11,7 @@ import {
   updatePhone,
   updateEmail,
   resetPassword,
+  resetPasswordViaEmail,
   storeAccess,
 } from './manage.js';
 import { getUsers } from './controller.js';
@@ -29,4 +30,5 @@ export {
   verifyEmail,
   resetPassword,
   storeAccess,
+  resetPasswordViaEmail,
 };

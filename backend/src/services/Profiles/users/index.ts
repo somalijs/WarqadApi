@@ -7,7 +7,9 @@ import { EmailLogin } from './auth/EmailLogin.js';
 
 import resendEmailVerification from './verification/ResendEmailVerification.js';
 import verifyEmail from './verification/verifyEmail.js';
-import resetPassword from './manage/resetPassword.js';
+import resetPassword, {
+  resetPasswordViaEmail,
+} from './manage/resetPassword.js';
 
 import createUser from './manage/Create.js';
 import getUsers from './controller/get.js';
@@ -29,6 +31,7 @@ const User = {
   resetPassword,
   verifyPasswordToken,
   updatePassword,
+  resetPasswordViaEmail: resetPasswordViaEmail,
 };
 
 export default User;

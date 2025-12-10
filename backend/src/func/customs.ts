@@ -9,8 +9,25 @@ export const getClientDomain = (req: ExpressRequest) => {
     origin = `http://${req.headers.host}`;
   }
 
-  // Extract hostname
-  const hostname = new URL(origin).hostname;
+  // Extract hostname and port
+  const url = new URL(origin);
+  const hostname = url.hostname; // e.g., "app.warqad.com" or "localhost"
+  const port = url.port; // e.g., "3000"
 
-  return { origin, hostname };
+  let subdomain: string | null = null;
+  let domain = hostname;
+
+  if (hostname === 'localhost') {
+    // For localhost, use the port as "subdomain"
+    subdomain = port || 'default';
+  } else {
+    // Split hostname for real domains
+    const parts = hostname.split('.');
+    if (parts.length > 2) {
+      subdomain = parts.slice(0, parts.length - 2).join('.');
+      domain = parts.slice(-2).join('.');
+    }
+  }
+
+  return { origin, hostname, domain, subdomain };
 };

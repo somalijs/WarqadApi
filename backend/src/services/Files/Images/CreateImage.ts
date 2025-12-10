@@ -8,11 +8,13 @@ const createImage = async ({
   id,
   session,
   name,
+  resize,
 }: {
   session?: ClientSession;
   req: ExpressRequest;
   id: string | mongoose.Types.ObjectId;
   name: string;
+  resize?: boolean;
 }) => {
   if (!req.files || req.files.length === 0) {
     throw new Error('No files uploaded');
@@ -32,6 +34,7 @@ const createImage = async ({
         file,
         folder: 'ahbaab',
         name: `${name}-${index}`,
+        resize,
       });
 
       if (upload.ok) {

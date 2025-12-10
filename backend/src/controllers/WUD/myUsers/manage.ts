@@ -5,6 +5,7 @@ import User from '../../../services/Profiles/users/index.js';
 import deleteToken from '../../../services/tokens/delete.js';
 import { handleTransactionError } from '../../../func/Errors.js';
 import getUserModel from '../../../models/profiles/User.js';
+import getAppModel from '../../../models/app.js';
 const createUser = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
     const session = await mongoose.startSession();
@@ -42,6 +43,31 @@ const updateDetails = expressAsyncHandler(
       res.status(201).json({
         success: true,
         message: 'User details updated successfully',
+        data: updatedUser,
+      });
+    } catch (error) {
+      await handleTransactionError({ error, session });
+    } finally {
+      await session.endSession();
+    }
+  }
+);
+export const activateUser = expressAsyncHandler(
+  async (req: ExpressRequest, res: ExpressResponse) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const updatedUser = await User.activate({
+        req,
+        session,
+        Model: getUserModel(req.db!),
+      });
+      await session.commitTransaction();
+      res.status(201).json({
+        success: true,
+        message: `User ${
+          updatedUser.isActive ? 'activated' : 'deactivated'
+        } successfully`,
         data: updatedUser,
       });
     } catch (error) {
@@ -135,6 +161,35 @@ const resetPassword = expressAsyncHandler(
         success: true,
         message: 'password reset sent to email successfully',
         data: updatedPhone,
+      });
+    } catch (error) {
+      await handleTransactionError({ error, session });
+    } finally {
+      await session.endSession();
+    }
+  }
+);
+export const resetPasswordViaEmail = expressAsyncHandler(
+  async (req: ExpressRequest, res: ExpressResponse) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const { app } = req.params;
+      const isApp = await getAppModel().findOne({ _id: app, isDeleted: false });
+      if (!isApp) {
+        throw new Error('App not found');
+      }
+      const resetPassword = await User.resetPasswordViaEmail({
+        req,
+        session,
+        Model: getUserModel(isApp.ref),
+        app: isApp,
+      });
+      await session.commitTransaction();
+      res.status(201).json({
+        success: true,
+        message: 'password reset sent to email successfully',
+        data: resetPassword,
       });
     } catch (error) {
       await handleTransactionError({ error, session });

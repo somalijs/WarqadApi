@@ -1,26 +1,56 @@
-import { getClientDomain } from '../../func/customs.js';
+import getPackageModel from '../../models/Packages.js';
 import { ExpressRequest } from '../../types/Express.js';
 import { z } from 'zod';
-import zodFields from '../../zod/Fields.js';
-import getAppModel from '../../models/app.js';
 const schema = z.object({
-  app: zodFields.objectId('App ID '),
+  type: z.enum(['umrah', 'hajj', 'hotel']),
 });
 const getWebsite = async ({ req }: { req: ExpressRequest }) => {
-  const { app } = schema.parse(req.query);
-  const { hostname } = getClientDomain(req);
-  const isApp = await getAppModel().findOne({ _id: app, isDeleted: false });
-  if (!isApp) {
-    throw new Error('Invalid App key');
-  }
-  const domains = isApp?.domains || [];
-  if (!domains.includes(hostname)) {
-    throw new Error('You are not allowed to access this app');
-  }
-  return {
-    app,
-    domain: getClientDomain(req),
+  const { db } = req;
+  const { type } = schema.parse(req.query);
+  const { name }: any = req.query;
+  const matches: Record<string, any> = {
+    isDeleted: false,
+    type,
   };
+  if (name) {
+    matches.name = { $regex: name?.toLowerCase(), $options: 'i' };
+  }
+  const Package = getPackageModel(db!);
+  const fetchData = await Package.aggregate([
+    {
+      $match: matches,
+    },
+    {
+      $lookup: {
+        from: 'images',
+        localField: '_id',
+        foreignField: 'package',
+        pipeline: [
+          {
+            $match: {
+              isDeleted: false,
+            },
+          },
+        ],
+        as: 'images',
+      },
+    },
+    {
+      $addFields: {
+        imgUrl: {
+          $getField: {
+            field: 'path',
+            input: { $arrayElemAt: ['$images', 0] },
+          },
+        },
+        imgUrls: '$images',
+      },
+    },
+    {
+      $sort: { price: -1 },
+    },
+  ]);
+  return name ? fetchData[0] : fetchData;
 };
 
 export default getWebsite;

@@ -15,15 +15,17 @@ import {
   verifyEmail,
   resetPassword,
   storeAccess,
+  resetPasswordViaEmail,
 } from '../../controllers/WUD/myUsers/index.js';
 import Protect, { Authorize } from '../../middleware/auth/Protect.js';
+import { activateUser } from '../../controllers/WAD/users/manage.js';
 const router = express.Router();
 
 router.post('/email-login', EmailLogin);
-router.put('/verify-password-token', verifyPasswordToken);
+router.put('/verify-password-token/:app', verifyPasswordToken);
 
 // update password
-router.put('/update-password', updatePassword);
+router.put('/update-password/:app', updatePassword);
 router.post('/create', Protect.User, Authorize('admin'), createUser);
 
 // get me
@@ -39,6 +41,7 @@ router.put(
   Authorize('admin'),
   updateDetails
 );
+router.put('/activate/:id', Protect.User, Authorize('admin'), activateUser);
 // update phone
 router.put('/update-phone/:id', Protect.User, Authorize('admin'), updatePhone);
 // update email
@@ -59,6 +62,7 @@ router.put(
   Authorize('admin'),
   resetPassword
 );
+router.put('/reset-password-via-email/:app', resetPasswordViaEmail);
 // store access
 router.put('/store-access', Protect.User, Authorize('admin'), storeAccess);
 export default router;

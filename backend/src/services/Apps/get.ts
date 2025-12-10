@@ -60,4 +60,5 @@ export const getSecretkey = async ({ appId }: { appId: string }) => {
   const revealkey = secretKeyManager.reveal(isApp.key!);
   return revealkey;
 };
+
 export default getApps;

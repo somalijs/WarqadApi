@@ -4,14 +4,13 @@ import { ExpressRequest } from '../../../../types/Express.js';
 
 import getVerificationModel from '../../../../models/verification.js';
 import { passwordEncryption } from '../../../../func/Encryptions.js';
-import zodFields from '../../../../zod/Fields.js';
+
 import getAppModel from '../../../../models/app.js';
 import getUserModel from '../../../../models/profiles/User.js';
 
 const schema = z.object({
   token: z.string('Token is required'),
   email: z.email('Email is required'),
-  app: zodFields.objectId('App Id'),
 });
 
 const verifyPasswordToken = async ({
@@ -21,7 +20,8 @@ const verifyPasswordToken = async ({
   req: ExpressRequest;
   session: ClientSession;
 }) => {
-  const { token, email, app } = schema.parse(req.body);
+  const { token, email } = schema.parse(req.body);
+  const { app } = req.params;
   const isApp = await getAppModel().findOne({ _id: app, isDeleted: false });
   if (!isApp) {
     throw new Error('App not found');

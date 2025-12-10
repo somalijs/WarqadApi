@@ -9,7 +9,9 @@ import Compare from '../../../../func/compare/index.js';
 import { DocumentUser } from '../../../../models/profiles/User.js';
 import getAppModel from '../../../../models/app.js';
 
-const schema = zodFields.phone;
+const schema = z.object({
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+});
 const idSchema = z.object({
   id: zodFields.objectId('Profile ID is required'),
 });
@@ -22,7 +24,7 @@ const updatePhone = async ({
   Model: Model<DocumentUser>;
   session: ClientSession;
 }) => {
-  const { dialCode, number } = schema.parse(req.body);
+  const { phoneNumber } = schema.parse(req.body);
   const { id } = idSchema.parse(req.params);
 
   const isExist = await Model.findOne({ _id: id, isDeleted: false }).session(
@@ -40,39 +42,27 @@ const updatePhone = async ({
   }
   const dbName = isApp?.ref;
   const news = {
-    dialCode,
-    number,
+    phoneNumber,
   };
   const olds = {
-    dialCode: isExist.phone?.dialCode,
-    number: isExist.phone?.number,
+    phoneNumber: isExist?.phoneNumber,
   };
   const changed = Compare.compareObjects({ old: olds, new: news });
   if (!changed) {
     throw new Error('No changes to update');
   }
-  const update = await Model.findByIdAndUpdate(
-    isExist._id,
-    {
-      phone: news,
-    },
-    {
-      new: true,
-      session,
-      runValidators: true,
-    }
-  );
+  const update = await Model.findByIdAndUpdate(isExist._id, news, {
+    new: true,
+    session,
+    runValidators: true,
+  });
   if (!update) {
     throw new Error('Failed to update phone number');
   }
   await addLogs({
     model: { type: 'user', _id: update._id },
-    data: {
-      phone: changed.new,
-    },
-    old: {
-      phone: changed.old,
-    },
+    data: news,
+    old: changed.old,
     by: req.by!,
     action: 'update',
     dbName,

@@ -36,6 +36,9 @@ const profileSchema = new Schema(
     phone: {
       type: phoneSchema,
     },
+    phoneNumber: {
+      type: String,
+    },
     role: {
       type: String,
       enum: Enums.roles,

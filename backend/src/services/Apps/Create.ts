@@ -13,6 +13,13 @@ const createSchema = z.object({
     .min(2)
     .max(15)
     .transform((val) => val.trim().toLowerCase()),
+  host: z
+    .string()
+    .min(2)
+    .max(15)
+    .transform(
+      (val) => val.toLowerCase().replace(/\s+/g, '') // ✅ removes ALL spaces
+    ),
 });
 
 async function createApp({
@@ -22,7 +29,7 @@ async function createApp({
   req: ExpressRequest;
   session: ClientSession;
 }) {
-  const { name } = createSchema.parse(req.body);
+  const { name, host } = createSchema.parse(req.body);
   const Model = getAppModel();
   // ensure duplicate name+type+subType combination doesn't exist
   const exists = await Model.findOne({ name }).session(session);
@@ -40,6 +47,7 @@ async function createApp({
     ref: genRef,
     isActive: false,
     by: req.by!,
+    host,
   };
 
   const created = await Model.create([createData], { session });

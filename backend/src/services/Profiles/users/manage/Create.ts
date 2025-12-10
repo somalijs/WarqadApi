@@ -16,7 +16,7 @@ const details = z.object({
   email: z.string().email('Invalid email address'),
   role: zodFields.role,
   sex: zodFields.sex,
-  phone: zodFields.phone.optional(),
+  phoneNumber: z.string().optional(),
   app: zodFields.objectId('App ID '),
 });
 
@@ -30,7 +30,7 @@ const createUser = async ({
   Model: Model<DocumentUser>;
 }) => {
   const parsed = details.parse(req.body);
-  const { name, surname, email, role, sex, phone, app } = parsed;
+  const { name, surname, email, role, sex, phoneNumber, app } = parsed;
   const isApp = await getAppModel().findOne({ _id: app, isDeleted: false });
   if (!isApp) {
     throw new Error('App not found');
@@ -44,7 +44,7 @@ const createUser = async ({
     appName: isApp.name,
     app: isApp._id,
     sex,
-    phone,
+    phoneNumber,
   };
 
   // check if email already exists

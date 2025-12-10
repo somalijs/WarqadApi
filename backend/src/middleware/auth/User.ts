@@ -15,6 +15,7 @@ const User = expressAsyncHandler(
     _res: ExpressResponse,
     next: ExpressNextFunction
   ) => {
+    console.log(`reached`);
     const token = await getToken({
       req,
       name: 'authToken',

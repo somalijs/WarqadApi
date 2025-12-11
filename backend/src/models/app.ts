@@ -39,7 +39,7 @@ const appSchema = new Schema(
   },
   { timestamps: true }
 );
-
+appSchema.index({ host: 1 }, { unique: true });
 // after save add key
 appSchema.pre('save', async function (next) {
   const key = await secretKeyManager.create();

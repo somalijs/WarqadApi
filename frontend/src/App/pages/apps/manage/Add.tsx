@@ -14,11 +14,25 @@ import { message } from 'antd';
 const details = z.object({
   name: z
     .string()
-    .min(2)
-    .max(15)
+    .min(2, 'Name must be at least 2 characters')
+    .max(30, 'Name must be at most 30 characters')
     .transform((val) => val.trim().toLowerCase()),
-});
 
+  host: z
+    .string()
+    .min(2, 'Subdomain must be at least 2 characters')
+    .max(15, 'Subdomain must be at most 15 characters')
+    .refine(
+      (val) => /^[a-z0-9-]+$/.test(val),
+      'Subdomain can only contain lowercase letters, numbers, and hyphens'
+    )
+    .refine(
+      (val) => !val.startsWith('-') && !val.endsWith('-'),
+      'Subdomain cannot start or end with a hyphen'
+    )
+    .refine((val) => !val.includes(' '), 'Subdomain cannot contain spaces')
+    .transform((val) => val.toLowerCase()), // sanitize lowercase
+});
 type SchemaType = z.infer<typeof details>;
 function Add({
   reFetch,
@@ -62,6 +76,7 @@ function Add({
         className='space-y-4'
       >
         <Fields.Input name='name' label='Name' type='text' form={form} />
+        <Fields.Input name='host' label='Host' type='text' form={form} />
 
         {errors.root && (
           <h1 className='text-red-500'>{errors.root?.message}</h1>

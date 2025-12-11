@@ -73,7 +73,7 @@ function Add({
     }
   };
   const type = form.watch('type');
-  const SubTypeOptions = type === 'website' ? Enums.websiteTypes : [];
+  const SubTypeOptions = type ? Enums.storeEnums[type] : [];
   useEffect(() => {
     if (app) {
       form.setValue('app', app);

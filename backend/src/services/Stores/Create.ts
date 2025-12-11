@@ -33,10 +33,14 @@ async function create({
   session: ClientSession;
 }) {
   const body = createSchema.parse(req.body);
-
+  // @ts-ignore
+  const subTypes = Enums.storeEnums[body.type];
+  if (!subTypes.includes(body.subType)) {
+    throw new Error(`Invalid subtype for ${body.type}`);
+  }
   const createData: storeDetailsType = {
     name: body.name,
-    type: body.type,
+    type: body.type as any,
     address: body.address,
     phoneNumber: body.phoneNumber,
     email: body.email,

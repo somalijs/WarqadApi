@@ -1,18 +1,13 @@
+const storeEnums = {
+  retail: ['electronics', 'clothes', 'pharmacy'],
+  services: ['travel agency', 'real estate'],
+  website: ['static', 'business', 'e-commerce'],
+};
 const Enums = {
   roles: ['admin', 'manager', 'staff'],
   gender: ['male', 'female'],
   models: ['user', 'agent'],
-  appTypes: ['retail', 'services', 'health'],
-  appSubTypes: [
-    // Retail
-    'electronics',
-    'clothing',
-    // Services
-    'travel-agency',
-    // Health
-    'pharmacy',
-  ],
-  storeTypes: ['retail', 'services', 'travel agency', 'website'],
-  websiteTypes: ['static', 'business', 'e-commerce'],
+  storeEnums: storeEnums,
+  storeTypes: Object.keys(storeEnums) as Array<keyof typeof storeEnums>,
 };
 export default Enums;

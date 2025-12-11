@@ -11,7 +11,7 @@ const createSchema = z.object({
   name: z
     .string()
     .min(2)
-    .max(15)
+    .max(30)
     .transform((val) => val.trim().toLowerCase()),
   host: z
     .string()

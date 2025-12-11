@@ -41,6 +41,11 @@ async function updateDetails({
 }) {
   const { id } = paramsSchema.parse(req.params);
   const updates = updateDetailsSchema.parse(req.body);
+  // @ts-ignore
+  const subTypes = Enums.storeEnums[updates.type];
+  if (!subTypes.includes(updates.subType)) {
+    throw new Error(`Invalid subtype for ${updates.type}`);
+  }
   const { app } = updates;
   const isApp = await getAppModel().findOne({ _id: app, isDeleted: false });
   if (!isApp) {
@@ -52,7 +57,7 @@ async function updateDetails({
     throw new Error('Store not found');
   }
 
-  const news = {
+  const news: any = {
     name: updates.name ?? current.name,
     type: updates.type ?? current.type,
     address: updates.address ?? current.address,

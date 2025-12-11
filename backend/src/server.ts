@@ -29,8 +29,9 @@ app.use(
       if (regex.test(origin)) {
         return callback(null, true);
       }
-
-      return callback(new Error('Not allowed by CORS'), false);
+      if (process.env.NODE_ENV === 'production')
+        return callback(new Error('Not allowed'), false);
+      else return callback(null, true);
     },
     credentials: true,
   })
@@ -39,10 +40,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);
-app.use((req, _res, next) => {
-  console.log('Request:', req.method, req.url);
-  next();
-});
 v1Routes(app);
 const PORT = process.env.PORT || 8080;
 

@@ -23,10 +23,8 @@ const storeSchema = new Schema({
     required: [true, 'Sub type is required'],
     validate: {
       validator: function (this: any, value: string) {
-        if (this.type === 'website') {
-          return Enums.websiteTypes.includes(value);
-        }
-        return true; // allow other types to pass
+        // @ts-ignore
+        return Enums.storeEnums[this?.type].includes(value);
       },
       message: (props: any) =>
         `${props.value} is not a valid subType for ${props.path}`,

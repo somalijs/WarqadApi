@@ -39,6 +39,10 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('trust proxy', true);
+app.use((req, _res, next) => {
+  console.log('Request:', req.method, req.url);
+  next();
+});
 v1Routes(app);
 const PORT = process.env.PORT || 8080;
 

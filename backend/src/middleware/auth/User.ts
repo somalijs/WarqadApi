@@ -51,7 +51,9 @@ const User = expressAsyncHandler(
     };
     // stores
     req.stores = profile?.stores || [];
-
+    req.storeIds = (profile?.stores || []).map((store: any) =>
+      String(store._id)
+    );
     next();
   }
 );

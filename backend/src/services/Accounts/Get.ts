@@ -5,7 +5,7 @@ import Enums from '../../func/Enums.js';
 import zodFields from '../../zod/Fields.js';
 import getAccountModel from '../../models/Acounts.js';
 const profileSchema = z.object({
-  profile: z.enum(Enums.accountProfiles as [string, ...string[]]),
+  profile: z.enum(Enums.accountProfiles),
   store: zodFields.objectId('Store Id ').optional(),
   id: zodFields.objectId('Account Id ').optional(),
   selection: z.enum(['true', 'false']).optional(),

@@ -15,7 +15,9 @@ class AppManager {
   // get host
   async getHost(req: ExpressRequest) {
     const { subdomain } = getClientDomain(req);
-    const app = await this.Model.findOne({ host: subdomain });
+    const app = await this.Model.findOne({
+      host: subdomain === '5000' ? '3001' : subdomain,
+    });
     if (!app) {
       throw new Error('App not found with this host');
     }

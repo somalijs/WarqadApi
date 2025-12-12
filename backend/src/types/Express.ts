@@ -33,6 +33,7 @@ type profile = {
   };
   appData?: AppDocument;
   stores?: any[];
+  storeIds?: string[];
 };
 export type ExpressRequest = Request & profile;
 export type ExpressResponse = Response;

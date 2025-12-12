@@ -38,7 +38,7 @@ const Enums = {
   taxTypes: ['exclusive', 'inclusive'],
   countries: ['Kenya', 'Tanzania', 'Somalia'],
 
-  accountProfiles: ['customer', 'supplier', 'employee', 'drawer'],
+  accountProfiles: ['customer', 'supplier', 'employee'] as const,
   fileStatus: ['pending', 'uploading', 'failed', 'done'],
 };
 export default Enums;

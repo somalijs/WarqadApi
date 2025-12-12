@@ -34,7 +34,7 @@ export const drawerSchema = z.object({
   type: z.string().optional().or(z.literal('')),
 });
 export const profileSchema = z.object({
-  profile: z.enum(Enums.accountProfiles as [string, ...string[]]),
+  profile: z.enum(Enums.accountProfiles),
 });
 type Profile = ProfileType;
 
@@ -75,6 +75,7 @@ const addAccount = async ({
     const { salary, guarantor } = baseSchema.parse(req.body);
     createData.salary = salary;
     createData.guarantor = guarantor;
+    // @ts-ignore
   } else if (profile === 'drawer') {
     delete createData.phoneNumber;
     delete createData.email;

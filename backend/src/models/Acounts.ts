@@ -11,14 +11,13 @@ const accountSchema = new Schema(
       trim: true,
       lowercase: true,
       minLength: [2, 'Name must be at least 2 characters'],
-      maxLength: [20, 'Name must be less than 20 characters'],
+      maxLength: [30, 'Name must be less than 30 characters'],
       required: [true, 'Name is required'],
     },
     phoneNumber: {
       type: String,
       trim: true,
       lowercase: true,
-      minLength: [5, 'Phone number must be at least 5 characters'],
       maxLength: [15, 'Phone number must be less than 15 characters'],
       match: [/^\+?[0-9]{5,15}$/, 'Please enter a valid phone number'],
     },
@@ -28,7 +27,9 @@ const accountSchema = new Schema(
       lowercase: true,
       validate: {
         validator: (email: string) => {
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+          if (email && email !== '')
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+          return true;
         },
         message: 'Please enter a valid email address',
       },
@@ -36,7 +37,6 @@ const accountSchema = new Schema(
     address: {
       type: String,
       trim: true,
-      minLength: [3, 'Address must be at least 3 characters'],
       maxLength: [100, 'Address must be less than 100 characters'],
     },
     profile: {
@@ -46,7 +46,15 @@ const accountSchema = new Schema(
     },
     // customer additional data
     guarantor: {
-      type: String,
+      name: String,
+      phoneNumber: String,
+      address: String,
+    },
+    // supplier additional data
+    company: {
+      name: String,
+      phoneNumber: String,
+      address: String,
     },
     creditLimit: {
       type: Number,
@@ -55,16 +63,10 @@ const accountSchema = new Schema(
     store: {
       type: Schema.Types.ObjectId,
       ref: 'Store',
-      required: [true, 'Store is required for employee profile'],
+      required: [true, 'Store is required'],
     },
     salary: {
       type: Number,
-    },
-
-    //drawers
-    keys: {
-      type: [Schema.Types.ObjectId],
-      ref: 'User',
     },
     type: {
       type: String,
@@ -93,7 +95,7 @@ accountSchema.index({ name: 1 });
 accountSchema.index({ phone: 1 });
 accountSchema.index({ store: 1 });
 
-type AccountDocument = InferSchemaType<typeof accountSchema>;
+export type AccountDocument = InferSchemaType<typeof accountSchema>;
 
 export type CustomerFieldsType = Pick<
   AccountDocument,

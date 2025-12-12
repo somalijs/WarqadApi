@@ -51,6 +51,7 @@ const editAccount = async ({
     news.creditLimit = data.creditLimit;
     olds.creditLimit = isExist.creditLimit;
   }
+  // @ts-ignore
   if (profile === 'drawer') {
     const { type } = drawerSchema.parse(req.body);
 

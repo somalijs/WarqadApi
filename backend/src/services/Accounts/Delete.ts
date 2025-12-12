@@ -8,7 +8,7 @@ import addLogs from '../Logs.js';
 import { passwordEncryption } from '../../func/Encryptions.js';
 
 export const profileSchema = z.object({
-  profile: z.enum(Enums.accountProfiles as [string, ...string[]]),
+  profile: z.enum(Enums.accountProfiles),
 });
 const schema = z.object({
   passkey: z.string(),

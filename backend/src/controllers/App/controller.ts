@@ -3,9 +3,10 @@ import { ExpressRequest, ExpressResponse } from '../../types/Express.js';
 import z from 'zod';
 import AppManager from '../../Managers/app/index.js';
 import StoreManger from '../../Managers/app/Stores/index.js';
+import AccountsManager from '../../Managers/app/accounts/index.js';
 
 const schema = z.object({
-  type: z.enum(['host', 'stores']),
+  type: z.enum(['host', 'stores', 'accounts']),
 });
 
 const appFreeController = expressAsyncHandler(
@@ -32,6 +33,10 @@ const appPrivateController = expressAsyncHandler(
       case 'stores':
         const Store = new StoreManger({ db: req.db! });
         resData = await Store.get(req);
+        break;
+      case 'accounts':
+        const Account = new AccountsManager({ db: req.db!, req });
+        resData = await Account.get();
         break;
       default:
         throw new Error('Invalid type');

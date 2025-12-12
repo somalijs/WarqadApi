@@ -27,7 +27,7 @@ class StoreManger {
     if (id) matches._id = new mongoose.Types.ObjectId(id);
     if (search) matches.name = { $regex: search.toLowerCase(), $options: 'i' };
     if (id && req.role !== 'admin') {
-      const storeIds = (req?.stores || []).map((store) => String(store._id));
+      const storeIds = req.storeIds || [];
       if (!storeIds.includes(id)) {
         throw new Error('You are not authorized to access this store');
       }
@@ -42,6 +42,7 @@ class StoreManger {
         subType: store.subType,
       }));
     }
+    if (id && !result.length) throw new Error('Store not found');
     return id ? result[0] : result;
   }
 }

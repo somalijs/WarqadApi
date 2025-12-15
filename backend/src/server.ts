@@ -18,6 +18,8 @@ await connectDB();
 
 const app = express();
 app.use(cookieParser());
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',');
+console.log('Allowed Origins:', allowedOrigins);
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -26,7 +28,10 @@ app.use(
       // Allow ANY subdomain of warqad.com
       const regex = /^https?:\/\/([a-zA-Z0-9-]+\.)*warqad\.com$/;
 
-      if (regex.test(origin)) {
+      if (
+        regex.test(origin) ||
+        (allowedOrigins && allowedOrigins.includes(origin))
+      ) {
         return callback(null, true);
       }
       if (process.env.NODE_ENV === 'production')

@@ -4,9 +4,10 @@ import z from 'zod';
 import AppManager from '../../Managers/app/index.js';
 import StoreManger from '../../Managers/app/Stores/index.js';
 import AccountsManager from '../../Managers/app/accounts/index.js';
+import DrawerManager from '../../Managers/app/drawers/index.js';
 
 const schema = z.object({
-  type: z.enum(['host', 'stores', 'accounts']),
+  type: z.enum(['host', 'stores', 'accounts', 'private-host', 'drawer']),
 });
 
 const appFreeController = expressAsyncHandler(
@@ -17,6 +18,9 @@ const appFreeController = expressAsyncHandler(
     switch (type) {
       case 'host':
         resData = await App.getHost(req);
+        break;
+      case 'private-host':
+        resData = await App.getPrivateHost(req);
         break;
       default:
         throw new Error('Invalid type');
@@ -37,6 +41,10 @@ const appPrivateController = expressAsyncHandler(
       case 'accounts':
         const Account = new AccountsManager({ db: req.db!, req });
         resData = await Account.get();
+        break;
+      case 'drawer':
+        const Drawer = new DrawerManager({ db: req.db!, req });
+        resData = await Drawer.get();
         break;
       default:
         throw new Error('Invalid type');

@@ -4,9 +4,10 @@ import AccountsManager from '../../Managers/app/accounts/index.js';
 import z from 'zod';
 import mongoose from 'mongoose';
 import { handleTransactionError } from '../../func/Errors.js';
+import DrawerManager from '../../Managers/app/drawers/index.js';
 
 const schema = z.object({
-  type: z.enum(['account']),
+  type: z.enum(['account', 'drawer']),
 });
 const appDeleteController = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
@@ -23,6 +24,14 @@ const appDeleteController = expressAsyncHandler(
             session: session,
           });
           resData = await Account.delete();
+          break;
+        case 'drawer':
+          const Drawer = new DrawerManager({
+            db: req.db!,
+            req,
+            session: session,
+          });
+          resData = await Drawer.delete();
           break;
         default:
           throw new Error('Invalid type');

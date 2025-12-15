@@ -1,6 +1,6 @@
 const storeEnums = {
   retail: ['electronics', 'clothes', 'pharmacy'],
-  services: ['travel agency', 'real estate'],
+  services: ['travel agency', 'real estate', 'invoice manager'],
   website: ['static', 'business', 'e-commerce'],
 };
 const Enums = {

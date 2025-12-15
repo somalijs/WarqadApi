@@ -20,6 +20,7 @@ const createSchema = z.object({
     .transform(
       (val) => val.toLowerCase().replace(/\s+/g, '') // ✅ removes ALL spaces
     ),
+  type: z.enum(['private', 'family']),
 });
 
 async function createApp({
@@ -29,7 +30,7 @@ async function createApp({
   req: ExpressRequest;
   session: ClientSession;
 }) {
-  const { name, host } = createSchema.parse(req.body);
+  const { name, host, type } = createSchema.parse(req.body);
   const Model = getAppModel();
   // ensure duplicate name+type+subType combination doesn't exist
   const exists = await Model.findOne({ name }).session(session);
@@ -46,6 +47,7 @@ async function createApp({
     name,
     ref: genRef,
     isActive: false,
+    type,
     by: req.by!,
     host,
   };

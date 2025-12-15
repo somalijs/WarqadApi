@@ -36,11 +36,15 @@ const SendUserPasskeyToken = async ({
     dbName,
   });
   const user = isExist;
+  let url = `https://${app?.host}${process.env.DOMAIN}`;
+  if (app.type === 'private') {
+    url = `https://${app?.host}`;
+  }
   // send to email the reset password token
   const sendEmail = await Emails.passwodToken({
     name: `${user.name} ${user.surname}`,
     email: user.email,
-    resetLink: `https://${app?.host}${process.env.DOMAIN}/reset-password?token=${pass.token}&email=${user.email}`,
+    resetLink: `${url}/reset-password?token=${pass.token}&email=${user.email}`,
     subject: 'Password Reset',
     company: app?.name,
     title: 'Password Reset Token',

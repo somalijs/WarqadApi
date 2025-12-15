@@ -20,6 +20,7 @@ export const getClientDomain = (req: ExpressRequest) => {
   if (hostname === 'localhost') {
     // For localhost, use the port as "subdomain"
     subdomain = port || 'default';
+    domain = port || 'localhost';
   } else {
     // Split hostname for real domains
     const parts = hostname.split('.');

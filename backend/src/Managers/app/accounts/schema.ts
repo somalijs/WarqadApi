@@ -33,6 +33,7 @@ const AccountSchema = {
   employee: z.object({
     salary: z.number().optional(),
   }),
+  broker: z.object({}),
   storeId: z.object({
     store: zodFields.objectId('Store'),
   }),

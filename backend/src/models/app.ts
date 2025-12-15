@@ -11,13 +11,17 @@ const appSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+    type: {
+      type: String,
+      enum: ['private', 'family'],
+      required: [true, 'App type is required'],
+    },
     host: {
       type: String,
       required: [true, 'App name is required'],
       lowercase: true,
       trim: true,
       set: (value: string) => value.replace(/\s+/g, ''),
-      unique: [true, 'App host must be unique'],
     },
     ref: {
       type: String,

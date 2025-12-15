@@ -14,10 +14,24 @@ class AppManager {
 
   // get host
   async getHost(req: ExpressRequest) {
-    const { subdomain } = getClientDomain(req);
+    const apps = getClientDomain(req);
+    const { subdomain } = apps;
     const app = await this.Model.findOne({
       host: subdomain === '5000' ? '3001' : subdomain,
     });
+    if (!app) {
+      throw new Error('App not found with this host');
+    }
+
+    return app;
+  }
+  async getPrivateHost(req: ExpressRequest) {
+    const apps = getClientDomain(req);
+    const { domain } = apps;
+    const app = await this.Model.findOne({
+      host: domain === '5000' ? '3005' : domain,
+    });
+
     if (!app) {
       throw new Error('App not found with this host');
     }

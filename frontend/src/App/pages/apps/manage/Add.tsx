@@ -32,6 +32,7 @@ const details = z.object({
     )
     .refine((val) => !val.includes(' '), 'Subdomain cannot contain spaces')
     .transform((val) => val.toLowerCase()), // sanitize lowercase
+  type: z.enum(['private', 'family']),
 });
 type SchemaType = z.infer<typeof details>;
 function Add({
@@ -77,6 +78,16 @@ function Add({
       >
         <Fields.Input name='name' label='Name' type='text' form={form} />
         <Fields.Input name='host' label='Host' type='text' form={form} />
+        <Fields.Select
+          name='type'
+          label='Type'
+          options={[
+            { label: 'Private', value: 'private' },
+            { label: 'Family', value: 'family' },
+          ]}
+          form={form}
+          required
+        />
 
         {errors.root && (
           <h1 className='text-red-500'>{errors.root?.message}</h1>

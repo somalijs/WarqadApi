@@ -22,15 +22,6 @@ const details = z.object({
     .string()
     .min(2, 'Subdomain must be at least 2 characters')
     .max(15, 'Subdomain must be at most 15 characters')
-    .refine(
-      (val) => /^[a-z0-9-]+$/.test(val),
-      'Subdomain can only contain lowercase letters, numbers, and hyphens'
-    )
-    .refine(
-      (val) => !val.startsWith('-') && !val.endsWith('-'),
-      'Subdomain cannot start or end with a hyphen'
-    )
-    .refine((val) => !val.includes(' '), 'Subdomain cannot contain spaces')
     .transform((val) => val.toLowerCase()), // sanitize lowercase
   type: z.enum(['private', 'family']),
 });

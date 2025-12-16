@@ -26,13 +26,17 @@ class AccountsManager {
     this.db = db;
   }
   async get() {
-    const { id, profile, select, store }: any = this.req.query;
+    const { id, profile, select, store, currency }: any = this.req.query;
     const matches: any = {
       isDeleted: false,
     };
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (profile) matches.profile = profile;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
+    const transactionMatches: any = {};
+    if (currency) {
+      transactionMatches.currency = currency;
+    }
     if (this.req?.role !== 'admin') {
       matches.store = {
         $in: (this.req?.storeIds || []).map(
@@ -43,6 +47,159 @@ class AccountsManager {
     const data = await this.Model.aggregate([
       {
         $match: matches,
+      },
+      {
+        $lookup: {
+          from: 'transactions',
+          let: { accountId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                ...transactionMatches,
+                isDeleted: false,
+                $expr: {
+                  $or: [
+                    {
+                      $eq: [
+                        '$$accountId',
+                        {
+                          $getField: {
+                            field: '_id',
+                            input: {
+                              $getField: { field: profile, input: '$$ROOT' },
+                            },
+                          },
+                        },
+                      ],
+                    },
+                    { $eq: ['$$accountId', '$broker._id'] },
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                amount: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: {
+                          $and: [
+                            { $eq: [profile, 'broker'] },
+                            {
+                              $eq: [
+                                '$adjustmentType',
+                                'customer-broker-invoice',
+                              ],
+                            },
+                          ],
+                        },
+                        then: '$commission',
+                      },
+                    ],
+                    default: '$amount',
+                  },
+                },
+              },
+            },
+            {
+              $addFields: {
+                calculatedAmount: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ['$action', 'debit'] },
+                        then: { $multiply: ['$amount', -1] },
+                      },
+                      {
+                        case: { $eq: ['$action', 'credit'] },
+                        then: '$amount',
+                      },
+                    ],
+                    default: '$amount',
+                  },
+                },
+                label: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ['$type', 'adjustment'] },
+                        then: {
+                          $concat: [
+                            {
+                              $cond: {
+                                if: { $eq: [profile, 'broker'] },
+                                then: 'Commission - ',
+                                else: '',
+                              },
+                            },
+                            { $ifNull: ['$details.description', ''] },
+                            ' (',
+                            { $ifNull: ['$details.houseNo', ''] },
+                            ')',
+                          ],
+                        },
+                      },
+                      {
+                        case: { $eq: ['$type', 'payment'] },
+                        then: {
+                          $concat: [
+                            'payment',
+                            ' ',
+                            {
+                              $cond: {
+                                if: {
+                                  $or: [
+                                    {
+                                      $and: [
+                                        { $eq: ['$action', 'debit'] },
+                                        { $eq: ['$profile', 'customer'] },
+                                      ],
+                                    },
+                                    {
+                                      $and: [
+                                        { $eq: ['$action', 'credit'] },
+                                        { $ne: ['$profile', 'customer'] },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                then: '(received)',
+                                else: '(Paid)',
+                              },
+                            },
+                            ' - ',
+                            { $ifNull: ['$note', ''] },
+                          ],
+                        },
+                      },
+                    ],
+                    default: '$amount',
+                  },
+                },
+              },
+            },
+            {
+              $sort: {
+                dateObj: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+          as: 'transactions',
+        },
+      },
+      {
+        $addFields: {
+          balance: { $sum: '$transactions.calculatedAmount' },
+          name: {
+            $cond: {
+              if: { $ne: [currency, null] },
+              then: { $concat: ['$name', ' (', currency, ')'] },
+              else: '$name',
+            },
+          },
+        },
       },
       {
         $sort: {

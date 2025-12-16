@@ -5,9 +5,12 @@ import z from 'zod';
 import mongoose from 'mongoose';
 import { handleTransactionError } from '../../func/Errors.js';
 import DrawerManager from '../../Managers/app/drawers/index.js';
+import TransactionSchema from '../../Managers/app/transaction/schema.js';
+
+import TransactionManager from '../../Managers/app/transaction/index.js';
 
 const schema = z.object({
-  type: z.enum(['account', 'drawer']),
+  type: z.enum(['account', 'drawer', 'transaction']),
 });
 const appCreateController = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
@@ -33,9 +36,25 @@ const appCreateController = expressAsyncHandler(
           });
           resData = await Model.add();
           break;
+        case 'transaction':
+          const { types } = TransactionSchema.types.parse(req.query);
+          const Transaction = new TransactionManager({
+            db: req.db!,
+            req,
+            session: session,
+          });
+          if (['customer-broker-invoice', 'broker-invoice'].includes(types)) {
+            resData = await Transaction.addAdjustment(req.query?.ref as string);
+          } else if (types === 'payment') {
+            resData = await Transaction.addPayment(req.query?.ref as string);
+          } else {
+            throw new Error('Invalid type for transaction');
+          }
+          break;
         default:
           throw new Error('Invalid type');
       }
+      if (!resData) throw new Error('Creation failed on Controller');
       await session.commitTransaction();
       res.status(200).json(resData);
     } catch (error) {

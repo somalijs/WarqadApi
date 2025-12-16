@@ -42,5 +42,8 @@ const Enums = {
   drawerTypes: ['drawer', 'bank'] as const,
   currencies: ['USD', 'KSH'] as const,
   fileStatus: ['pending', 'uploading', 'failed', 'done'],
+  transactionTypes: ['adjustment', 'payment'] as const,
+  adjustmentTypes: ['customer-broker-invoice', 'broker-invoice'] as const,
+  action: ['credit', 'debit'] as const,
 };
 export default Enums;

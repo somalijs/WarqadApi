@@ -26,13 +26,14 @@ class DrawerManager {
     this.db = db;
   }
   async get() {
-    const { id, type, select, store }: any = this.req.query;
+    const { id, type, select, store, currency }: any = this.req.query;
     const matches: any = {
       isDeleted: false,
     };
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (type) matches.type = type;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
+    if (currency) matches.currency = currency;
     if (this.req?.role !== 'admin') {
       matches.store = {
         $in: (this.req?.storeIds || []).map(
@@ -45,6 +46,98 @@ class DrawerManager {
         $match: matches,
       },
       {
+        $addFields: {
+          name: {
+            $concat: ['$name', ' (', '$currency', ')'],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'transactions',
+          let: { drawerId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                isDeleted: false,
+                $expr: {
+                  $or: [
+                    { $eq: ['$from._id', '$$drawerId'] },
+                    { $eq: ['$to._id', '$$drawerId'] },
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                calculatedAmount: {
+                  $cond: {
+                    if: { $eq: ['$from._id', '$$drawerId'] },
+                    then: { $multiply: ['$amount', -1] },
+                    else: '$amount',
+                  },
+                },
+                label: {
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ['$type', 'payment'] },
+                        then: {
+                          $concat: [
+                            '$profile',
+                            ' ',
+                            'payment',
+                            ' ',
+                            {
+                              $cond: {
+                                if: {
+                                  $or: [
+                                    {
+                                      $and: [
+                                        { $eq: ['$action', 'debit'] },
+                                        { $eq: ['$profile', 'customer'] },
+                                      ],
+                                    },
+                                    {
+                                      $and: [
+                                        { $eq: ['$action', 'credit'] },
+                                        { $ne: ['$profile', 'customer'] },
+                                      ],
+                                    },
+                                  ],
+                                },
+                                then: '(received)',
+                                else: '(Paid)',
+                              },
+                            },
+                            ' - ',
+                            { $ifNull: ['$note', ''] },
+                          ],
+                        },
+                      },
+                    ],
+                    default: 'Transaction Unknown',
+                  },
+                },
+                line: {
+                  $cond: {
+                    if: { $eq: ['$from._id', '$$drawerId'] },
+                    then: 'debit',
+                    else: 'credit',
+                  },
+                },
+              },
+            },
+          ],
+          as: 'transactions',
+        },
+      },
+      {
+        $addFields: {
+          balance: { $sum: '$transactions.calculatedAmount' },
+        },
+      },
+      {
         $sort: {
           name: 1,
         },
@@ -55,7 +148,7 @@ class DrawerManager {
       result = data.map((item) => {
         return {
           value: item._id,
-          label: item.name,
+          label: item.name + ` (${item.currency})`,
           type: item.type,
           balance: item.balance || 0,
         };

@@ -21,4 +21,16 @@ const Generators = {
   },
 };
 
+export function addVersion(ref: string): string {
+  // Match something like "ST57246-3"
+  const match = ref.match(/^(.*?)-(\d+)$/);
+
+  if (match) {
+    const base = match[1];
+    const version = parseInt(match[2], 10) + 1;
+    return `${base}-${version}`;
+  } else {
+    return `${ref}-1`;
+  }
+}
 export default Generators;

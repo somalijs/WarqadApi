@@ -8,6 +8,7 @@ import Generators, { addVersion } from '../../../func/Generators.js';
 import adjustmentBox from './Adjustment.js';
 import mongoose from 'mongoose';
 import paymentBox from './Payment.js';
+import addLogs from '../../../services/Logs.js';
 
 type Props = {
   db: string;
@@ -27,11 +28,12 @@ class TransactionManager {
     this.db = db;
   }
   async get() {
-    const { id, type, store, ref, date, adjustmentType, profile }: any =
+    const { id, type, store, ref, date, adjustmentType, profile, free }: any =
       this.req.query;
-    const matches: any = {
-      isDeleted: false,
-    };
+    const matches: any = {};
+    if (free !== 'true') {
+      matches.isDeleted = false;
+    }
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (type) matches.type = type;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
@@ -108,6 +110,31 @@ class TransactionManager {
         : 'Adjustment created successfully',
       data: result,
     };
+  }
+  async reverseTransaction() {
+    const { id } = this.req.params;
+    // check if is exist
+    const isExist = await this.Model.findOne({ _id: id }).session(
+      this.session || null
+    );
+    if (!isExist) throw new Error(`Reference  is not exist`);
+    if (isExist.isDeleted)
+      throw new Error(`Transaction (${isExist.ref}) is already reversed`);
+    // mark old as deleted
+    isExist.isDeleted = true;
+    await isExist.save({ session: this.session || null });
+
+    // add logs
+    await addLogs({
+      model: { type: isExist.type, _id: isExist._id },
+      data: isExist,
+      old: {},
+      by: this.req.by!,
+      dbName: this.req.db!,
+      action: 'delete',
+      session: this.session || null,
+    });
+    return { message: `Transaction (${isExist.ref}) reversed successfully` };
   }
 }
 

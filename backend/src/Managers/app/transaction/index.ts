@@ -9,6 +9,8 @@ import adjustmentBox from './Adjustment.js';
 import mongoose from 'mongoose';
 import paymentBox from './Payment.js';
 import addLogs from '../../../services/Logs.js';
+import MoneyTransfer from './MoneyTransfer.js';
+import expensesBox from './Expenses.js';
 
 type Props = {
   db: string;
@@ -45,6 +47,34 @@ class TransactionManager {
     const data = await this.Model.aggregate([
       {
         $match: matches,
+      },
+      {
+        $lookup: {
+          from: 'drawers',
+          localField: 'from._id',
+          foreignField: '_id',
+          as: 'fromObj',
+        },
+      },
+      {
+        $lookup: {
+          from: 'drawers',
+          localField: 'to._id',
+          foreignField: '_id',
+          as: 'toObj',
+        },
+      },
+      {
+        $unwind: {
+          path: '$fromObj',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$toObj',
+          preserveNullAndEmptyArrays: true,
+        },
       },
     ]);
     return id || ref ? data[0] : data;
@@ -98,6 +128,68 @@ class TransactionManager {
     }
 
     const result = await paymentBox({
+      req: this.req,
+      ref: refNo,
+      Model: this.Model,
+      session: this.session,
+    });
+
+    return {
+      message: ref
+        ? 'Adjustment updated successfully'
+        : 'Adjustment created successfully',
+      data: result,
+    };
+  }
+  async MoneyTransfer(ref?: string) {
+    let refNo: string;
+    if (ref) {
+      // check if is exist
+      const isExist = await this.Model.findOne({ ref }).session(
+        this.session || null
+      );
+      if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
+      refNo = addVersion(isExist.ref);
+      // mark old as deleted
+      isExist.isDeleted = true;
+      await isExist.save({ session: this.session || null });
+    } else {
+      const refs = await this.Model.distinct('ref');
+      refNo = Generators.IdNums({ ids: refs, prefix: 'PAY' });
+    }
+
+    const result = await MoneyTransfer({
+      req: this.req,
+      ref: refNo,
+      Model: this.Model,
+      session: this.session,
+    });
+
+    return {
+      message: ref
+        ? 'Adjustment updated successfully'
+        : 'Adjustment created successfully',
+      data: result,
+    };
+  }
+  async addExpenses(ref?: string) {
+    let refNo: string;
+    if (ref) {
+      // check if is exist
+      const isExist = await this.Model.findOne({ ref }).session(
+        this.session || null
+      );
+      if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
+      refNo = addVersion(isExist.ref);
+      // mark old as deleted
+      isExist.isDeleted = true;
+      await isExist.save({ session: this.session || null });
+    } else {
+      const refs = await this.Model.distinct('ref');
+      refNo = Generators.IdNums({ ids: refs, prefix: 'PAY' });
+    }
+
+    const result = await expensesBox({
       req: this.req,
       ref: refNo,
       Model: this.Model,

@@ -72,6 +72,30 @@ const adjustmentBox = async ({
       if (!isBroker) throw new Error(`Broker of id (${broker}) not found`);
       createData.broker = { _id: isBroker._id, name: isBroker.name };
     }
+    if (adjustmentType === 'supplier-invoice') {
+      const { supplier } = TransactionSchema.supplier.parse(req.body);
+      const isSupplier = await getAccountModel(req.db!).findOne({
+        _id: supplier,
+        profile: 'supplier',
+        isDeleted: false,
+      });
+      if (!isSupplier) {
+        throw new Error(`Supplier of id (${supplier}) not found`);
+      }
+      createData.supplier = { _id: isSupplier._id, name: isSupplier.name };
+    }
+    if (adjustmentType === 'employee-invoice') {
+      const { employee } = TransactionSchema.employee.parse(req.body);
+      const isEmployee = await getAccountModel(req.db!).findOne({
+        _id: employee,
+        profile: 'employee',
+        isDeleted: false,
+      });
+      if (!isEmployee) {
+        throw new Error(`Employee of id (${employee}) not found`);
+      }
+      createData.employee = { _id: isEmployee._id, name: isEmployee.name };
+    }
   }
 
   // create adjustment

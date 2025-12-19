@@ -15,6 +15,7 @@ const schema = z.object({
     'private-host',
     'drawer',
     'transaction',
+    'get-statement',
   ]),
 });
 
@@ -58,6 +59,28 @@ const appPrivateController = expressAsyncHandler(
       case 'transaction':
         const Transaction = new TransactionManager({ db: req.db!, req });
         resData = await Transaction.get();
+        break;
+      case 'get-statement':
+        const schemaStatement = z.object({
+          profile: z.enum([
+            'supplier',
+            'customer',
+            'broker',
+            'employee',
+            'drawer',
+          ]),
+        });
+        const { profile } = schemaStatement.parse(req.params);
+        if (!req.query?.id) {
+          throw new Error('Id is required');
+        }
+        if (profile === 'drawer') {
+          const Drawer = new DrawerManager({ db: req.db!, req });
+          resData = await Drawer.get();
+        } else {
+          const Account = new AccountsManager({ db: req.db!, req });
+          resData = await Account.get();
+        }
         break;
       default:
         throw new Error('Invalid type');

@@ -43,10 +43,21 @@ const appCreateController = expressAsyncHandler(
             req,
             session: session,
           });
-          if (['customer-broker-invoice', 'broker-invoice'].includes(types)) {
+          if (
+            [
+              'customer-broker-invoice',
+              'broker-invoice',
+              'supplier-invoice',
+              'employee-invoice',
+            ].includes(types)
+          ) {
             resData = await Transaction.addAdjustment(req.query?.ref as string);
           } else if (types === 'payment') {
             resData = await Transaction.addPayment(req.query?.ref as string);
+          } else if (types === 'money-transfer') {
+            resData = await Transaction.MoneyTransfer(req.query?.ref as string);
+          } else if (types === 'expenses') {
+            resData = await Transaction.addExpenses(req.query?.ref as string);
           } else {
             throw new Error('Invalid type for transaction');
           }

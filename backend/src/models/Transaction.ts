@@ -16,6 +16,9 @@ const transactionSchema = new Schema({
     type: Number,
     required: [true, 'Transaction amount is required'],
   },
+  exchangedAmount: {
+    type: Number,
+  },
   details: {
     type: Object,
   },
@@ -67,8 +70,16 @@ const transactionSchema = new Schema({
   },
   from: {
     type: bySchema,
+    function(this: any) {
+      return ['money-transfer'].includes(this.type);
+    },
   },
-  to: { type: bySchema },
+  to: {
+    type: bySchema,
+    function(this: any) {
+      return ['money-transfer'].includes(this.type);
+    },
+  },
   by: { type: bySchema, required: [true, 'Creator is required'] },
   isDeleted: {
     type: Boolean,

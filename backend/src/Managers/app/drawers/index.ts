@@ -6,6 +6,7 @@ import addLogs from '../../../services/Logs.js';
 import getStoreModel from '../../../models/Store.js';
 import mongoose from 'mongoose';
 import getDrawerModel, { DrawerDocument } from '../../../models/drawers.js';
+import { getDateObject } from '../../../func/Date.js';
 
 type Props = {
   db: string;
@@ -26,10 +27,11 @@ class DrawerManager {
     this.db = db;
   }
   async get() {
-    const { id, type, select, store, currency }: any = this.req.query;
+    const { id, type, select, store, currency, from, to }: any = this.req.query;
     const matches: any = {
       isDeleted: false,
     };
+
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (type) matches.type = type;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
@@ -40,6 +42,15 @@ class DrawerManager {
           (item) => new mongoose.Types.ObjectId(item)
         ),
       };
+    }
+    const transactionMatches: any = {};
+    if (from) {
+      const getFromDateObj = getDateObject(from);
+      transactionMatches.dateObj = { $gte: getFromDateObj };
+    }
+    if (to) {
+      const getToDateObj = getDateObject(to);
+      transactionMatches.dateObj = { $lte: getToDateObj };
     }
     const data = await this.Model.aggregate([
       {
@@ -55,16 +66,29 @@ class DrawerManager {
       {
         $lookup: {
           from: 'transactions',
-          let: { drawerId: '$_id' },
+          let: { drawerId: '$_id', drawerCurrency: '$currency' },
           pipeline: [
             {
               $match: {
                 isDeleted: false,
+                ...transactionMatches,
                 $expr: {
                   $or: [
                     { $eq: ['$from._id', '$$drawerId'] },
                     { $eq: ['$to._id', '$$drawerId'] },
                   ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                originalAmount: '$amount',
+                amount: {
+                  $cond: {
+                    if: { $ne: ['$currency', '$$drawerCurrency'] },
+                    then: { $ifNull: ['$exchangedAmount', 0] },
+                    else: '$amount',
+                  },
                 },
               },
             },
@@ -115,6 +139,28 @@ class DrawerManager {
                           ],
                         },
                       },
+                      {
+                        case: { $eq: ['$type', 'money-transfer'] },
+                        then: {
+                          $concat: [
+                            'Money Transfer from (',
+                            {
+                              $ifNull: ['$from.name', 'Unknown'],
+                            },
+                            ') to (',
+                            {
+                              $ifNull: ['$to.name', 'Unknown'],
+                            },
+                            ')',
+                          ],
+                        },
+                      },
+                      {
+                        case: { $eq: ['$type', 'expenses'] },
+                        then: {
+                          $concat: ['Expenses - ', '$details.description'],
+                        },
+                      },
                     ],
                     default: 'Transaction Unknown',
                   },
@@ -126,6 +172,7 @@ class DrawerManager {
                     else: 'credit',
                   },
                 },
+                currency: '$$drawerCurrency',
               },
             },
           ],
@@ -150,6 +197,7 @@ class DrawerManager {
           value: item._id,
           label: item.name + ` (${item.currency})`,
           type: item.type,
+          currency: item.currency,
           balance: item.balance || 0,
         };
       });

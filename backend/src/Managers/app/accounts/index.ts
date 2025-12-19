@@ -6,6 +6,7 @@ import addLogs from '../../../services/Logs.js';
 import z from 'zod';
 import getStoreModel from '../../../models/Store.js';
 import mongoose from 'mongoose';
+import { getDateRange } from '../../../func/Date.js';
 
 type Props = {
   db: string;
@@ -26,10 +27,12 @@ class AccountsManager {
     this.db = db;
   }
   async get() {
-    const { id, profile, select, store, currency }: any = this.req.query;
+    const { id, profile, select, store, currency, from, to }: any =
+      this.req.query;
     const matches: any = {
       isDeleted: false,
     };
+
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (profile) matches.profile = profile;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
@@ -37,6 +40,11 @@ class AccountsManager {
     if (currency) {
       transactionMatches.currency = currency;
     }
+    if (from && to) {
+      const { starts, ends } = getDateRange({ from, to });
+      transactionMatches.dateObj = { $gte: starts, $lte: ends };
+    }
+
     if (this.req?.role !== 'admin') {
       matches.store = {
         $in: (this.req?.storeIds || []).map(

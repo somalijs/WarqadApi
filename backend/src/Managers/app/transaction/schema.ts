@@ -17,6 +17,16 @@ const TransactionSchema = {
     profile: z.enum(Enums.accountProfiles),
     drawer: zodFields.objectId('drawer'),
   }),
+  expenses: z.object({
+    drawer: zodFields.objectId('drawer'),
+  }),
+  moneyTransfer: z.object({
+    from: zodFields.objectId('from'),
+    to: zodFields.objectId('to'),
+  }),
+  exchangedAmount: z.object({
+    exchangedAmount: z.number().min(0),
+  }),
   adjustment: z.object({
     adjustmentType: z.enum(Enums.adjustmentTypes),
   }),
@@ -42,7 +52,12 @@ const TransactionSchema = {
     employee: zodFields.objectId('employee'),
   }),
   types: z.object({
-    types: z.enum([...Enums.adjustmentTypes, 'payment']),
+    types: z.enum([
+      ...Enums.adjustmentTypes,
+      'payment',
+      'money-transfer',
+      'expenses',
+    ]),
   }),
 };
 

@@ -200,6 +200,7 @@ class AccountsManager {
       {
         $addFields: {
           balance: { $sum: '$transactions.calculatedAmount' },
+          currency: { $ifNull: [currency, null] },
           name: {
             $cond: {
               if: { $ne: [currency, null] },
@@ -226,6 +227,7 @@ class AccountsManager {
         };
       });
     }
+
     return id ? result[0] : result;
   }
   async add() {

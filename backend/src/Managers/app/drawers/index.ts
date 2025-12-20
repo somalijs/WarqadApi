@@ -6,7 +6,7 @@ import addLogs from '../../../services/Logs.js';
 import getStoreModel from '../../../models/Store.js';
 import mongoose from 'mongoose';
 import getDrawerModel, { DrawerDocument } from '../../../models/drawers.js';
-import { getDateObject } from '../../../func/Date.js';
+import { getDateRange } from '../../../func/Date.js';
 
 type Props = {
   db: string;
@@ -44,13 +44,9 @@ class DrawerManager {
       };
     }
     const transactionMatches: any = {};
-    if (from) {
-      const getFromDateObj = getDateObject(from);
-      transactionMatches.dateObj = { $gte: getFromDateObj };
-    }
-    if (to) {
-      const getToDateObj = getDateObject(to);
-      transactionMatches.dateObj = { $lte: getToDateObj };
+    if (from && to) {
+      const { starts, ends } = getDateRange({ from, to });
+      transactionMatches.dateObj = { $gte: starts, $lte: ends };
     }
     const data = await this.Model.aggregate([
       {
@@ -202,6 +198,7 @@ class DrawerManager {
         };
       });
     }
+
     return id ? result[0] : result;
   }
   async add() {

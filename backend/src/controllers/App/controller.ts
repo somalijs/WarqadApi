@@ -6,6 +6,7 @@ import StoreManger from '../../Managers/app/Stores/index.js';
 import AccountsManager from '../../Managers/app/accounts/index.js';
 import DrawerManager from '../../Managers/app/drawers/index.js';
 import TransactionManager from '../../Managers/app/transaction/index.js';
+import { AccountsPDF } from '../../pdfs/AccountsPdf.js';
 
 const schema = z.object({
   type: z.enum([
@@ -42,7 +43,7 @@ const appPrivateController = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
     let resData;
     const { type } = schema.parse(req.params);
-
+    const { pdf } = req.query;
     switch (type) {
       case 'stores':
         const Store = new StoreManger({ db: req.db! });
@@ -85,7 +86,29 @@ const appPrivateController = expressAsyncHandler(
       default:
         throw new Error('Invalid type');
     }
-    res.status(200).json(resData);
+    if (pdf === 'true') {
+      if (['accounts', 'drawer'].includes(type)) {
+        const { id } = req.query;
+        const { profile, currency } = req.query;
+        if (id) {
+          await AccountsPDF({ res, data: resData, req, type: 'account' });
+        } else {
+          await AccountsPDF({
+            res,
+            data: {
+              transactions: resData,
+              store: resData[0]?.store,
+              currency: currency,
+              name: `${profile ? `${profile}` : 'drawer'} Balances `,
+            },
+            req,
+            type: 'balances',
+          });
+        }
+      }
+    } else {
+      res.status(200).json(resData);
+    }
   }
 );
 export { appFreeController, appPrivateController };

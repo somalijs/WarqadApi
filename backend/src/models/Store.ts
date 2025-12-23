@@ -21,14 +21,6 @@ const storeSchema = new Schema({
   subType: {
     type: String,
     required: [true, 'Sub type is required'],
-    validate: {
-      validator: function (this: any, value: string) {
-        // @ts-ignore
-        return Enums.storeEnums[this?.type].includes(value);
-      },
-      message: (props: any) =>
-        `${props.value} is not a valid subType for ${props.path}`,
-    },
   },
   address: {
     type: String,

@@ -157,11 +157,22 @@ class DrawerManager {
                           $concat: ['Expenses - ', '$details.description'],
                         },
                       },
+                      {
+                        case: { $eq: ['$type', 'adjustment'] },
+                        then: '$details.description',
+                      },
                     ],
                     default: 'Transaction Unknown',
                   },
                 },
                 line: {
+                  $cond: {
+                    if: { $eq: ['$from._id', '$$drawerId'] },
+                    then: 'debit',
+                    else: 'credit',
+                  },
+                },
+                action: {
                   $cond: {
                     if: { $eq: ['$from._id', '$$drawerId'] },
                     then: 'debit',

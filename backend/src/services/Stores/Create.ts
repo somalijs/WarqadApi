@@ -13,7 +13,7 @@ const createSchema = z.object({
     .min(3)
     .max(25)
     .transform((val) => val.trim().toLowerCase().replace(/\s+/g, ' ')),
-  type: z.enum(Enums.storeTypes as [string, ...string[]]),
+  type: z.enum(Enums.StoreType),
   subType: z.string(),
   address: z.string().optional(),
   phoneNumber: z.string().optional(),

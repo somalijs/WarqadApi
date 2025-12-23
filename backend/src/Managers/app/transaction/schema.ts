@@ -42,6 +42,9 @@ const TransactionSchema = {
   broker: z.object({
     broker: zodFields.objectId('Broker'),
   }),
+  drawer: z.object({
+    drawer: zodFields.objectId('drawer'),
+  }),
   customer: z.object({
     customer: zodFields.objectId('Customercustomer'),
   }),

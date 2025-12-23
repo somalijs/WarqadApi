@@ -4,6 +4,7 @@ import { ExpressRequest } from '../../../types/Express.js';
 import TransactionSchema from './schema.js';
 import { TransactionDocument } from '../../../models/Transaction.js';
 import addLogs from '../../../services/Logs.js';
+import getDrawerModel from '../../../models/drawers.js';
 
 const adjustmentBox = async ({
   req,
@@ -32,6 +33,7 @@ const adjustmentBox = async ({
   };
   if (type === 'adjustment') {
     const { adjustmentType } = TransactionSchema.adjustment.parse(req.body);
+
     createData.adjustmentType = adjustmentType;
     if (adjustmentType === 'customer-broker-invoice') {
       const { broker, customer, commission } = TransactionSchema.CB.parse(
@@ -95,6 +97,30 @@ const adjustmentBox = async ({
         throw new Error(`Employee of id (${employee}) not found`);
       }
       createData.employee = { _id: isEmployee._id, name: isEmployee.name };
+    }
+    if (adjustmentType === 'drawer-adjustment') {
+      const { drawer } = TransactionSchema.drawer.parse(req.body);
+      const isDrawer = await getDrawerModel(req.db!).findOne({
+        _id: drawer,
+        isDeleted: false,
+      });
+      if (!isDrawer) {
+        throw new Error(`drawer of id (${drawer}) not found`);
+      }
+      console.log(action);
+      if (action === 'credit') {
+        createData.to = {
+          _id: isDrawer._id,
+          name: isDrawer.name,
+        };
+      } else {
+        createData.from = {
+          _id: isDrawer._id,
+          name: isDrawer.name,
+        };
+      }
+
+      createData.currency = isDrawer.currency;
     }
   }
 

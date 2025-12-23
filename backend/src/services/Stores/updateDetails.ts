@@ -20,7 +20,7 @@ const updateDetailsSchema = z.object({
     .max(25)
     .transform((val) => val.trim().toLowerCase().replace(/\s+/g, ' '))
     .optional(),
-  type: z.enum(Enums.storeTypes as [string, ...string[]]).optional(),
+  type: z.enum(Enums.StoreType),
   address: z.string().min(3).max(100).optional(),
   phoneNumber: z.string().min(6).optional(),
   subType: z.string(),
@@ -42,8 +42,12 @@ async function updateDetails({
   const { id } = paramsSchema.parse(req.params);
   const updates = updateDetailsSchema.parse(req.body);
   // @ts-ignore
-  const subTypes = Enums.storeEnums[updates.type];
-  if (!subTypes.includes(updates.subType)) {
+  if (!updates?.type) {
+    throw new Error('Invalid type');
+  }
+  const subTypes = Enums.storeEnums[updates.type] || [];
+
+  if (!subTypes.includes(updates?.subType)) {
     throw new Error(`Invalid subtype for ${updates.type}`);
   }
   const { app } = updates;

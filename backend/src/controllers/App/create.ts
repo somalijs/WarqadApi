@@ -49,6 +49,7 @@ const appCreateController = expressAsyncHandler(
               'broker-invoice',
               'supplier-invoice',
               'employee-invoice',
+              'drawer-adjustment',
             ].includes(types)
           ) {
             resData = await Transaction.addAdjustment(req.query?.ref as string);

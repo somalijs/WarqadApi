@@ -12,6 +12,7 @@ const router = Router();
 
 router.get('/get/:type', appFreeController);
 router.get('/get-private/:type', Protect.User, appPrivateController);
+router.post('/get-private/:type', Protect.User, appPrivateController);
 router.post('/create/:type', Protect.User, appCreateController);
 router.put('/update/:type/:id', Protect.User, appUpdateController);
 router.put('/delete/:type/:id', Protect.User, appDeleteController);

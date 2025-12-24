@@ -115,7 +115,30 @@ export const AccountsPDF = async ({
           header: 'Name',
           key: 'name',
         },
-
+        {
+          header: 'Credit',
+          key: 'credit',
+          render: (row) => (
+            <span className={`font-bold text-green-500`}>
+              <Formats.Amount
+                amount={row.credit}
+                currency={data?.currency ?? 'USD'}
+              />
+            </span>
+          ),
+        },
+        {
+          header: 'Debit',
+          key: 'debit',
+          render: (row) => (
+            <span className={`font-bold text-red-500`}>
+              <Formats.Amount
+                amount={row.debit}
+                currency={data?.currency ?? 'USD'}
+              />
+            </span>
+          ),
+        },
         {
           header: 'Amount',
           key: 'balance',
@@ -123,12 +146,7 @@ export const AccountsPDF = async ({
           width: 'w-fit',
 
           render: (row) => (
-            <span
-              className={`font-bold ${
-                row?.balance > 0 ? 'text-green-500' : 'text-red-500'
-              }`}
-            >
-              {row?.balance > 0 ? '+' : '-'}{' '}
+            <span className={`font-bold `}>
               <Formats.Amount
                 amount={row.balance}
                 currency={data?.currency ?? 'USD'}

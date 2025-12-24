@@ -200,6 +200,33 @@ class AccountsManager {
       {
         $addFields: {
           balance: { $sum: '$transactions.calculatedAmount' },
+          credit: {
+            $reduce: {
+              input: '$transactions',
+              initialValue: 0,
+              in: {
+                $cond: [
+                  { $gte: ['$$this.calculatedAmount', 0] },
+                  { $add: ['$$value', '$$this.calculatedAmount'] },
+                  '$$value',
+                ],
+              },
+            },
+          },
+          debit: {
+            $reduce: {
+              input: '$transactions',
+              initialValue: 0,
+              in: {
+                $cond: [
+                  { $lt: ['$$this.calculatedAmount', 0] },
+                  { $add: ['$$value', '$$this.calculatedAmount'] },
+                  '$$value',
+                ],
+              },
+            },
+          },
+
           currency: { $ifNull: [currency, null] },
           name: {
             $cond: {

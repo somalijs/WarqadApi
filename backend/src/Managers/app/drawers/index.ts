@@ -7,6 +7,7 @@ import getStoreModel from '../../../models/Store.js';
 import mongoose from 'mongoose';
 import getDrawerModel, { DrawerDocument } from '../../../models/drawers.js';
 import { getDateRange } from '../../../func/Date.js';
+import { getDrawers } from './helpers/getAccounts.js';
 
 type Props = {
   db: string;
@@ -338,23 +339,33 @@ class DrawerManager {
 
   async delete() {
     const { id } = this.req.params;
-    const { store } = AccountSchema.storeId.parse(this.req.body);
-    if (this.req?.role !== 'admin') {
-      if ((this.req?.storeIds || []).includes(String(store)))
-        throw new Error('You are not authorized For this Store');
+    if (this.req.role !== 'admin') {
+      throw new Error('Only Admins Can Delete Drawer');
     }
     const isExist = await this.Model.findOne({
       _id: id,
-      store,
     }).session(this?.session || null);
-    if (!isExist) throw new Error(`Account of id (${id}) not found`);
+    if (!isExist) throw new Error(`Drawer of id (${id}) not found`);
 
+    //
+    const account = await getDrawers({
+      Model: this.Model,
+      matches: {
+        _id: new mongoose.Types.ObjectId(id),
+      },
+    });
+    const balance = account[0]?.balance || 0;
+
+    if (balance !== 0) throw new Error(`Drawer has balance  (${balance})`);
     // else delete
-    const deleted = await this.Model.findOneAndDelete(
-      { _id: id, store },
-      { session: this?.session || null }
+    const deleted = await this.Model.findOneAndUpdate(
+      { _id: id },
+      {
+        isDeleted: true,
+      },
+      { session: this?.session || null, new: true }
     );
-    if (!deleted) throw new Error(`Error deleting account of id (${id})`);
+    if (!deleted) throw new Error(`Error deleting drawer of id (${id})`);
 
     // add logs
     await addLogs({

@@ -25,7 +25,15 @@ class StoreManger {
     if (type) matches.type = type;
     if (subType) matches.subType = subType;
     if (id) matches._id = new mongoose.Types.ObjectId(id);
-    if (search) matches.name = { $regex: search.toLowerCase(), $options: 'i' };
+    if (search) {
+      const or: any[] = [{ name: { $regex: search, $options: 'i' } }];
+
+      if (mongoose.Types.ObjectId.isValid(search)) {
+        or.push({ _id: new mongoose.Types.ObjectId(search) });
+      }
+
+      matches.$or = or;
+    }
     if (id && req.role !== 'admin') {
       const storeIds = req.storeIds || [];
       if (!storeIds.includes(id)) {

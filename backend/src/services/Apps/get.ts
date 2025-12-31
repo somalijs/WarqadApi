@@ -13,7 +13,7 @@ const getApps = async ({ req }: { req: ExpressRequest }) => {
 
   const match: Record<string, unknown> = {};
   if (id) match._id = new mongoose.Types.ObjectId(id);
-  console.log(id);
+
   if (query) {
     match.name = { $regex: query.toLowerCase(), $options: 'i' };
   }

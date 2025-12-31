@@ -7,6 +7,7 @@ import z from 'zod';
 import getStoreModel from '../../../models/Store.js';
 import mongoose from 'mongoose';
 import { getDateRange } from '../../../func/Date.js';
+import { getAccounts } from './helpers/GetAccount.js';
 
 type Props = {
   db: string;
@@ -238,6 +239,25 @@ class AccountsManager {
         },
       },
       {
+        $lookup: {
+          from: 'stores',
+          localField: 'store',
+          foreignField: '_id',
+          as: 'storeData',
+        },
+      },
+      {
+        $unwind: {
+          path: '$storeData',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          storeName: '$storeData.name',
+        },
+      },
+      {
         $sort: {
           name: 1,
         },
@@ -322,6 +342,7 @@ class AccountsManager {
       email: isExist.email,
       address: isExist.address,
       profile: isExist.profile,
+      store: String(isExist.store),
     };
 
     // create newData
@@ -331,6 +352,7 @@ class AccountsManager {
       email: base.email,
       address: base.address,
       profile: base.profile,
+      store: String(base.store),
     };
 
     // type-specific fields
@@ -394,20 +416,44 @@ class AccountsManager {
 
   async delete() {
     const { id } = this.req.params;
-    const { store } = AccountSchema.storeId.parse(this.req.body);
-    if (this.req?.role !== 'admin') {
-      if ((this.req?.storeIds || []).includes(String(store)))
-        throw new Error('You are not authorized For this Store');
+    if (this.req.role !== 'admin') {
+      throw new Error('You are not authorized For this Store');
     }
+
     const isExist = await this.Model.findOne({
       _id: id,
-      store,
     }).session(this?.session || null);
     if (!isExist) throw new Error(`Account of id (${id}) not found`);
+    // check balance before delete
+    const accountKSH = await getAccounts({
+      Model: this.Model,
+      matches: { _id: new mongoose.Types.ObjectId(id) },
+      transactionMatches: {
+        currency: 'KSH',
+      },
+      profile: isExist.profile,
+    });
+    const accountUSD = await getAccounts({
+      Model: this.Model,
+      matches: { _id: new mongoose.Types.ObjectId(id) },
+      transactionMatches: {
+        currency: 'USD',
+      },
+      profile: isExist.profile,
+    });
+    const USD = accountUSD[0]?.balance || 0;
+    const KSH = accountKSH[0]?.balance || 0;
 
+    if (USD !== 0) {
+      throw new Error(`Account has USD balance of ${USD}`);
+    }
+    if (KSH !== 0) {
+      throw new Error(`Account has KSH balance of ${KSH}`);
+    }
     // else delete
-    const deleted = await this.Model.findOneAndDelete(
-      { _id: id, store },
+    const deleted = await this.Model.findOneAndUpdate(
+      { _id: id },
+      { isDeleted: true },
       { session: this?.session || null }
     );
     if (!deleted) throw new Error(`Error deleting account of id (${id})`);

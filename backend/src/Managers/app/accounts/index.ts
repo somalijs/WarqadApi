@@ -389,7 +389,7 @@ class AccountsManager {
     if (JSON.stringify(oldData) === JSON.stringify(newData)) {
       throw new Error('No changes made');
     }
-    newData.store = isExist.store;
+
     // replace the document
     const updated = await this.Model.findOneAndReplace(
       { _id: isExist._id },

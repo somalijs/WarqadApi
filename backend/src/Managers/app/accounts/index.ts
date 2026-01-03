@@ -36,7 +36,15 @@ class AccountsManager {
 
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (profile) matches.profile = profile;
-    if (store) matches.store = new mongoose.Types.ObjectId(store!);
+    if (store) {
+      const storeId = new mongoose.Types.ObjectId(store);
+      matches.store = storeId;
+      if (
+        this.req.role !== 'admin' &&
+        !this.req?.storeIds?.map((store) => String(store)).includes(store)
+      )
+        throw new Error('You are not authorized For this Store');
+    }
     const transactionMatches: any = {};
     if (currency) {
       transactionMatches.currency = currency;
@@ -46,7 +54,7 @@ class AccountsManager {
       transactionMatches.dateObj = { $gte: starts, $lte: ends };
     }
 
-    if (this.req?.role !== 'admin') {
+    if (this.req?.role !== 'admin' && !store) {
       matches.store = {
         $in: (this.req?.storeIds || []).map(
           (item) => new mongoose.Types.ObjectId(item)

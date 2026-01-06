@@ -1,11 +1,11 @@
-import expressAsyncHandler from 'express-async-handler';
-import { ExpressRequest, ExpressResponse } from '../../../types/Express.js';
-import mongoose from 'mongoose';
+import expressAsyncHandler from "express-async-handler";
+import { ExpressRequest, ExpressResponse } from "../../../types/Express.js";
+import mongoose from "mongoose";
 
-import { handleTransactionError } from '../../../func/Errors.js';
-import createToken from '../../../services/tokens/create.js';
-import deleteToken from '../../../services/tokens/delete.js';
-import User from '../../../services/Profiles/users/index.js';
+import { handleTransactionError } from "../../../func/Errors.js";
+import createToken from "../../../services/tokens/create.js";
+import deleteToken from "../../../services/tokens/delete.js";
+import User from "../../../services/Profiles/users/index.js";
 const EmailLogin = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
     const session = await mongoose.startSession();
@@ -17,8 +17,8 @@ const EmailLogin = expressAsyncHandler(
       });
       await session.commitTransaction();
       // set cookie
-      const cookieName = 'authToken';
-      await createToken({
+      const cookieName = "authToken";
+      const token = await createToken({
         res,
         name: cookieName,
         decoded: `${login.dbName},${login._id.toString()}`,
@@ -26,8 +26,9 @@ const EmailLogin = expressAsyncHandler(
 
       res.status(200).json({
         success: true,
-        message: 'User logged in successfully',
+        message: "User logged in successfully",
         data: login,
+        token,
       });
     } catch (error) {
       await handleTransactionError({ error, session });
@@ -37,8 +38,8 @@ const EmailLogin = expressAsyncHandler(
   }
 );
 const logout = async (_req: ExpressRequest, res: ExpressResponse) => {
-  await deleteToken(res, 'authToken');
-  res.status(200).json({ success: true, message: 'Logged out successfully' });
+  await deleteToken(res, "authToken");
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 
 const getMe = expressAsyncHandler(

@@ -1,13 +1,13 @@
-import { ClientSession, Model } from 'mongoose';
-import getAccountModel, { AccountDocument } from '../../../models/Acounts.js';
-import { ExpressRequest } from '../../../types/Express.js';
-import AccountSchema from './schema.js';
-import addLogs from '../../../services/Logs.js';
-import z from 'zod';
-import getStoreModel from '../../../models/Store.js';
-import mongoose from 'mongoose';
-import { getDateRange } from '../../../func/Date.js';
-import { getAccounts } from './helpers/GetAccount.js';
+import { ClientSession, Model } from "mongoose";
+import getAccountModel, { AccountDocument } from "../../../models/Acounts.js";
+import { ExpressRequest } from "../../../types/Express.js";
+import AccountSchema from "./schema.js";
+import addLogs from "../../../services/Logs.js";
+import z from "zod";
+import getStoreModel from "../../../models/Store.js";
+import mongoose from "mongoose";
+import { getDateRange } from "../../../func/Date.js";
+import { getAccounts } from "./helpers/GetAccount.js";
 
 type Props = {
   db: string;
@@ -40,10 +40,10 @@ class AccountsManager {
       const storeId = new mongoose.Types.ObjectId(store);
       matches.store = storeId;
       if (
-        this.req.role !== 'admin' &&
+        this.req.role !== "admin" &&
         !this.req?.storeIds?.map((store) => String(store)).includes(store)
       )
-        throw new Error('You are not authorized For this Store');
+        throw new Error("You are not authorized For this Store");
     }
     const transactionMatches: any = {};
     if (currency) {
@@ -54,7 +54,7 @@ class AccountsManager {
       transactionMatches.dateObj = { $gte: starts, $lte: ends };
     }
 
-    if (this.req?.role !== 'admin' && !store) {
+    if (this.req?.role !== "admin" && !store) {
       matches.store = {
         $in: (this.req?.storeIds || []).map(
           (item) => new mongoose.Types.ObjectId(item)
@@ -67,8 +67,8 @@ class AccountsManager {
       },
       {
         $lookup: {
-          from: 'transactions',
-          let: { accountId: '$_id' },
+          from: "transactions",
+          let: { accountId: "$_id" },
           pipeline: [
             {
               $match: {
@@ -78,18 +78,18 @@ class AccountsManager {
                   $or: [
                     {
                       $eq: [
-                        '$$accountId',
+                        "$$accountId",
                         {
                           $getField: {
-                            field: '_id',
+                            field: "_id",
                             input: {
-                              $getField: { field: profile, input: '$$ROOT' },
+                              $getField: { field: profile, input: "$$ROOT" },
                             },
                           },
                         },
                       ],
                     },
-                    { $eq: ['$$accountId', '$broker._id'] },
+                    { $eq: ["$$accountId", "$broker._id"] },
                   ],
                 },
               },
@@ -102,19 +102,19 @@ class AccountsManager {
                       {
                         case: {
                           $and: [
-                            { $eq: [profile, 'broker'] },
+                            { $eq: [profile, "broker"] },
                             {
                               $eq: [
-                                '$adjustmentType',
-                                'customer-broker-invoice',
+                                "$adjustmentType",
+                                "customer-broker-invoice",
                               ],
                             },
                           ],
                         },
-                        then: '$commission',
+                        then: "$commission",
                       },
                     ],
-                    default: '$amount',
+                    default: "$amount",
                   },
                 },
               },
@@ -125,73 +125,73 @@ class AccountsManager {
                   $switch: {
                     branches: [
                       {
-                        case: { $eq: ['$action', 'debit'] },
-                        then: { $multiply: ['$amount', -1] },
+                        case: { $eq: ["$action", "debit"] },
+                        then: { $multiply: ["$amount", -1] },
                       },
                       {
-                        case: { $eq: ['$action', 'credit'] },
-                        then: '$amount',
+                        case: { $eq: ["$action", "credit"] },
+                        then: "$amount",
                       },
                     ],
-                    default: '$amount',
+                    default: "$amount",
                   },
                 },
                 label: {
                   $switch: {
                     branches: [
                       {
-                        case: { $eq: ['$type', 'adjustment'] },
+                        case: { $eq: ["$type", "adjustment"] },
                         then: {
                           $concat: [
                             {
                               $cond: {
-                                if: { $eq: [profile, 'broker'] },
-                                then: 'Commission - ',
-                                else: '',
+                                if: { $eq: [profile, "broker"] },
+                                then: "Commission - ",
+                                else: "",
                               },
                             },
-                            { $ifNull: ['$details.description', ''] },
-                            ' (',
-                            { $ifNull: ['$details.houseNo', ''] },
-                            ')',
+                            { $ifNull: ["$details.description", ""] },
+                            " (",
+                            { $ifNull: ["$details.houseNo", ""] },
+                            ")",
                           ],
                         },
                       },
                       {
-                        case: { $eq: ['$type', 'payment'] },
+                        case: { $eq: ["$type", "payment"] },
                         then: {
                           $concat: [
-                            'payment',
-                            ' ',
+                            "payment",
+                            " ",
                             {
                               $cond: {
                                 if: {
                                   $or: [
                                     {
                                       $and: [
-                                        { $eq: ['$action', 'debit'] },
-                                        { $eq: ['$profile', 'customer'] },
+                                        { $eq: ["$action", "debit"] },
+                                        { $eq: ["$profile", "customer"] },
                                       ],
                                     },
                                     {
                                       $and: [
-                                        { $eq: ['$action', 'credit'] },
-                                        { $ne: ['$profile', 'customer'] },
+                                        { $eq: ["$action", "credit"] },
+                                        { $ne: ["$profile", "customer"] },
                                       ],
                                     },
                                   ],
                                 },
-                                then: '(received)',
-                                else: '(Paid)',
+                                then: "(received)",
+                                else: "(Paid)",
                               },
                             },
-                            ' - ',
-                            { $ifNull: ['$note', ''] },
+                            " - ",
+                            { $ifNull: ["$note", ""] },
                           ],
                         },
                       },
                     ],
-                    default: '$amount',
+                    default: "$amount",
                   },
                 },
               },
@@ -203,34 +203,34 @@ class AccountsManager {
               },
             },
           ],
-          as: 'transactions',
+          as: "transactions",
         },
       },
       {
         $addFields: {
-          balance: { $sum: '$transactions.calculatedAmount' },
+          balance: { $sum: "$transactions.calculatedAmount" },
           credit: {
             $reduce: {
-              input: '$transactions',
+              input: "$transactions",
               initialValue: 0,
               in: {
                 $cond: [
-                  { $gte: ['$$this.calculatedAmount', 0] },
-                  { $add: ['$$value', '$$this.calculatedAmount'] },
-                  '$$value',
+                  { $gte: ["$$this.calculatedAmount", 0] },
+                  { $add: ["$$value", "$$this.calculatedAmount"] },
+                  "$$value",
                 ],
               },
             },
           },
           debit: {
             $reduce: {
-              input: '$transactions',
+              input: "$transactions",
               initialValue: 0,
               in: {
                 $cond: [
-                  { $lt: ['$$this.calculatedAmount', 0] },
-                  { $add: ['$$value', '$$this.calculatedAmount'] },
-                  '$$value',
+                  { $lt: ["$$this.calculatedAmount", 0] },
+                  { $add: ["$$value", "$$this.calculatedAmount"] },
+                  "$$value",
                 ],
               },
             },
@@ -240,29 +240,29 @@ class AccountsManager {
           name: {
             $cond: {
               if: { $ne: [currency, null] },
-              then: { $concat: ['$name', ' (', currency, ')'] },
-              else: '$name',
+              then: { $concat: ["$name", " (", currency, ")"] },
+              else: "$name",
             },
           },
         },
       },
       {
         $lookup: {
-          from: 'stores',
-          localField: 'store',
-          foreignField: '_id',
-          as: 'storeData',
+          from: "stores",
+          localField: "store",
+          foreignField: "_id",
+          as: "storeData",
         },
       },
       {
         $unwind: {
-          path: '$storeData',
+          path: "$storeData",
           preserveNullAndEmptyArrays: true,
         },
       },
       {
         $addFields: {
-          storeName: '$storeData.name',
+          storeName: "$storeData.name",
         },
       },
       {
@@ -291,9 +291,9 @@ class AccountsManager {
       base.profile as keyof typeof AccountSchema
     ].parse(this.req.body);
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== 'admin') {
+    if (this.req?.role !== "admin") {
       if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error('You are not authorized For this Store');
+        throw new Error("You are not authorized For this Store");
     }
     const createData = {
       ...base,
@@ -316,7 +316,7 @@ class AccountsManager {
       old: {},
       by: this.req.by!,
       dbName: this.db,
-      action: 'create',
+      action: "create",
       session: this?.session || null,
     });
     return created[0];
@@ -329,9 +329,9 @@ class AccountsManager {
     // validate base
     const base = AccountSchema.base.parse(rawBody);
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== 'admin') {
+    if (this.req?.role !== "admin") {
       if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error('You are not authorized For this Store');
+        throw new Error("You are not authorized For this Store");
     }
     // validate type-specific schema
     const others =
@@ -365,27 +365,30 @@ class AccountsManager {
 
     // type-specific fields
     switch (base.profile) {
-      case 'customer': {
+      case "customer": {
         const customerData = others as z.infer<
-          (typeof AccountSchema)['customer']
+          (typeof AccountSchema)["customer"]
         >;
+
         oldData.guarantor = isExist.guarantor;
         oldData.creditLimit = isExist.creditLimit;
+        oldData.houseNo = isExist.houseNo;
         newData.guarantor = customerData.guarantor;
         newData.creditLimit = customerData.creditLimit;
+        newData.houseNo = customerData.houseNo;
         break;
       }
-      case 'employee': {
+      case "employee": {
         const employeeData = others as z.infer<
-          (typeof AccountSchema)['employee']
+          (typeof AccountSchema)["employee"]
         >;
         oldData.salary = isExist.salary;
         newData.salary = employeeData.salary;
         break;
       }
-      case 'supplier': {
+      case "supplier": {
         const supplierData = others as z.infer<
-          (typeof AccountSchema)['supplier']
+          (typeof AccountSchema)["supplier"]
         >;
         oldData.company = isExist.company;
         newData.company = supplierData.company;
@@ -395,7 +398,7 @@ class AccountsManager {
 
     // check if data changed
     if (JSON.stringify(oldData) === JSON.stringify(newData)) {
-      throw new Error('No changes made');
+      throw new Error("No changes made");
     }
 
     // replace the document
@@ -415,7 +418,7 @@ class AccountsManager {
       old: isExist,
       by: this.req.by!,
       dbName: this.db,
-      action: 'update',
+      action: "update",
       session: this.session,
     });
 
@@ -424,8 +427,8 @@ class AccountsManager {
 
   async delete() {
     const { id } = this.req.params;
-    if (this.req.role !== 'admin') {
-      throw new Error('You are not authorized For this Store');
+    if (this.req.role !== "admin") {
+      throw new Error("You are not authorized For this Store");
     }
 
     const isExist = await this.Model.findOne({
@@ -437,7 +440,7 @@ class AccountsManager {
       Model: this.Model,
       matches: { _id: new mongoose.Types.ObjectId(id) },
       transactionMatches: {
-        currency: 'KSH',
+        currency: "KSH",
       },
       profile: isExist.profile,
     });
@@ -445,7 +448,7 @@ class AccountsManager {
       Model: this.Model,
       matches: { _id: new mongoose.Types.ObjectId(id) },
       transactionMatches: {
-        currency: 'USD',
+        currency: "USD",
       },
       profile: isExist.profile,
     });
@@ -473,7 +476,7 @@ class AccountsManager {
       old: isExist,
       by: this.req.by!,
       dbName: this.db,
-      action: 'delete',
+      action: "delete",
       session: this.session,
     });
 

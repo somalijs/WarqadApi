@@ -1,6 +1,6 @@
-import { Model } from 'mongoose';
+import { Model } from "mongoose";
 
-import { AccountDocument } from '../../../../models/Acounts.js';
+import { AccountDocument } from "../../../../models/Acounts.js";
 
 export async function getAccounts({
   matches,
@@ -15,14 +15,18 @@ export async function getAccounts({
   profile?: string;
   currency?: string;
 }) {
+  if (currency) {
+    transactionMatches["currency"] = currency;
+  }
+
   const data = await Model.aggregate([
     {
       $match: matches,
     },
     {
       $lookup: {
-        from: 'transactions',
-        let: { accountId: '$_id' },
+        from: "transactions",
+        let: { accountId: "$_id" },
         pipeline: [
           {
             $match: {
@@ -32,18 +36,18 @@ export async function getAccounts({
                 $or: [
                   {
                     $eq: [
-                      '$$accountId',
+                      "$$accountId",
                       {
                         $getField: {
-                          field: '_id',
+                          field: "_id",
                           input: {
-                            $getField: { field: profile, input: '$$ROOT' },
+                            $getField: { field: profile, input: "$$ROOT" },
                           },
                         },
                       },
                     ],
                   },
-                  { $eq: ['$$accountId', '$broker._id'] },
+                  { $eq: ["$$accountId", "$broker._id"] },
                 ],
               },
             },
@@ -56,16 +60,16 @@ export async function getAccounts({
                     {
                       case: {
                         $and: [
-                          { $eq: [profile, 'broker'] },
+                          { $eq: [profile, "broker"] },
                           {
-                            $eq: ['$adjustmentType', 'customer-broker-invoice'],
+                            $eq: ["$adjustmentType", "customer-broker-invoice"],
                           },
                         ],
                       },
-                      then: '$commission',
+                      then: "$commission",
                     },
                   ],
-                  default: '$amount',
+                  default: "$amount",
                 },
               },
             },
@@ -76,73 +80,73 @@ export async function getAccounts({
                 $switch: {
                   branches: [
                     {
-                      case: { $eq: ['$action', 'debit'] },
-                      then: { $multiply: ['$amount', -1] },
+                      case: { $eq: ["$action", "debit"] },
+                      then: { $multiply: ["$amount", -1] },
                     },
                     {
-                      case: { $eq: ['$action', 'credit'] },
-                      then: '$amount',
+                      case: { $eq: ["$action", "credit"] },
+                      then: "$amount",
                     },
                   ],
-                  default: '$amount',
+                  default: "$amount",
                 },
               },
               label: {
                 $switch: {
                   branches: [
                     {
-                      case: { $eq: ['$type', 'adjustment'] },
+                      case: { $eq: ["$type", "adjustment"] },
                       then: {
                         $concat: [
                           {
                             $cond: {
-                              if: { $eq: [profile, 'broker'] },
-                              then: 'Commission - ',
-                              else: '',
+                              if: { $eq: [profile, "broker"] },
+                              then: "Commission - ",
+                              else: "",
                             },
                           },
-                          { $ifNull: ['$details.description', ''] },
-                          ' (',
-                          { $ifNull: ['$details.houseNo', ''] },
-                          ')',
+                          { $ifNull: ["$details.description", ""] },
+                          " (",
+                          { $ifNull: ["$details.houseNo", ""] },
+                          ")",
                         ],
                       },
                     },
                     {
-                      case: { $eq: ['$type', 'payment'] },
+                      case: { $eq: ["$type", "payment"] },
                       then: {
                         $concat: [
-                          'payment',
-                          ' ',
+                          "payment",
+                          " ",
                           {
                             $cond: {
                               if: {
                                 $or: [
                                   {
                                     $and: [
-                                      { $eq: ['$action', 'debit'] },
-                                      { $eq: ['$profile', 'customer'] },
+                                      { $eq: ["$action", "debit"] },
+                                      { $eq: ["$profile", "customer"] },
                                     ],
                                   },
                                   {
                                     $and: [
-                                      { $eq: ['$action', 'credit'] },
-                                      { $ne: ['$profile', 'customer'] },
+                                      { $eq: ["$action", "credit"] },
+                                      { $ne: ["$profile", "customer"] },
                                     ],
                                   },
                                 ],
                               },
-                              then: '(received)',
-                              else: '(Paid)',
+                              then: "(received)",
+                              else: "(Paid)",
                             },
                           },
-                          ' - ',
-                          { $ifNull: ['$note', ''] },
+                          " - ",
+                          { $ifNull: ["$note", ""] },
                         ],
                       },
                     },
                   ],
-                  default: '$amount',
+                  default: "$amount",
                 },
               },
             },
@@ -154,34 +158,34 @@ export async function getAccounts({
             },
           },
         ],
-        as: 'transactions',
+        as: "transactions",
       },
     },
     {
       $addFields: {
-        balance: { $sum: '$transactions.calculatedAmount' },
+        balance: { $sum: "$transactions.calculatedAmount" },
         credit: {
           $reduce: {
-            input: '$transactions',
+            input: "$transactions",
             initialValue: 0,
             in: {
               $cond: [
-                { $gte: ['$$this.calculatedAmount', 0] },
-                { $add: ['$$value', '$$this.calculatedAmount'] },
-                '$$value',
+                { $gte: ["$$this.calculatedAmount", 0] },
+                { $add: ["$$value", "$$this.calculatedAmount"] },
+                "$$value",
               ],
             },
           },
         },
         debit: {
           $reduce: {
-            input: '$transactions',
+            input: "$transactions",
             initialValue: 0,
             in: {
               $cond: [
-                { $lt: ['$$this.calculatedAmount', 0] },
-                { $add: ['$$value', '$$this.calculatedAmount'] },
-                '$$value',
+                { $lt: ["$$this.calculatedAmount", 0] },
+                { $add: ["$$value", "$$this.calculatedAmount"] },
+                "$$value",
               ],
             },
           },
@@ -191,29 +195,29 @@ export async function getAccounts({
         name: {
           $cond: {
             if: { $ne: [currency, null] },
-            then: { $concat: ['$name', ' (', currency, ')'] },
-            else: '$name',
+            then: { $concat: ["$name", " (", currency, ")"] },
+            else: "$name",
           },
         },
       },
     },
     {
       $lookup: {
-        from: 'stores',
-        localField: 'store',
-        foreignField: '_id',
-        as: 'storeData',
+        from: "stores",
+        localField: "store",
+        foreignField: "_id",
+        as: "storeData",
       },
     },
     {
       $unwind: {
-        path: '$storeData',
+        path: "$storeData",
         preserveNullAndEmptyArrays: true,
       },
     },
     {
       $addFields: {
-        storeName: '$storeData.name',
+        storeName: "$storeData.name",
       },
     },
     {

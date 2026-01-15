@@ -9,7 +9,7 @@ const AccountSchema = {
     email: z.string().email().or(z.literal("")).optional(),
     address: z.string().optional(),
     profile: z.enum(Enums.accountProfiles),
-
+    currency: z.enum(Enums.currencies).optional(),
     store: zodFields.objectId("Store"),
   }),
   customer: z.object({
@@ -24,6 +24,7 @@ const AccountSchema = {
     creditLimit: z.number().optional(),
   }),
   supplier: z.object({
+    supplierType: z.enum(Enums.supplierTypes).optional(),
     company: z
       .object({
         name: z.string().optional(),
@@ -32,6 +33,8 @@ const AccountSchema = {
       })
       .optional(),
   }),
+  shop: z.object({}),
+  store: z.object({}),
   employee: z.object({
     salary: z.number().optional(),
   }),

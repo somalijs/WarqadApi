@@ -8,6 +8,7 @@ import getStoreModel from "../../../models/Store.js";
 import mongoose from "mongoose";
 import { getDateRange } from "../../../func/Date.js";
 import { getAccounts } from "./helpers/GetAccount.js";
+import { getKaramaAccounts } from "./helpers/accountKarama.js";
 
 type Props = {
   db: string;
@@ -28,8 +29,18 @@ class AccountsManager {
     this.db = db;
   }
   async get() {
-    const { id, profile, select, store, currency, from, to, search }: any =
-      this.req.query;
+    const {
+      id,
+      profile,
+      select,
+      store,
+      currency,
+      from,
+      to,
+      search,
+      application,
+      supplierType,
+    }: any = this.req.query;
     const matches: any = {
       isDeleted: false,
     };
@@ -54,8 +65,9 @@ class AccountsManager {
         throw new Error("You are not authorized For this Store");
     }
     const transactionMatches: any = {};
-    if (currency) {
-      transactionMatches.currency = currency;
+
+    if (supplierType) {
+      matches.supplierType = supplierType;
     }
     if (from && to) {
       const { starts, ends } = getDateRange({ from, to });
@@ -69,216 +81,25 @@ class AccountsManager {
         ),
       };
     }
-    const data = await this.Model.aggregate([
-      {
-        $match: matches,
-      },
-      {
-        $lookup: {
-          from: "transactions",
-          let: { accountId: "$_id" },
-          pipeline: [
-            {
-              $match: {
-                ...transactionMatches,
-                isDeleted: false,
-                $expr: {
-                  $or: [
-                    {
-                      $eq: [
-                        "$$accountId",
-                        {
-                          $getField: {
-                            field: "_id",
-                            input: {
-                              $getField: { field: profile, input: "$$ROOT" },
-                            },
-                          },
-                        },
-                      ],
-                    },
-                    { $eq: ["$$accountId", "$broker._id"] },
-                  ],
-                },
-              },
-            },
-            {
-              $addFields: {
-                amount: {
-                  $switch: {
-                    branches: [
-                      {
-                        case: {
-                          $and: [
-                            { $eq: [profile, "broker"] },
-                            {
-                              $eq: [
-                                "$adjustmentType",
-                                "customer-broker-invoice",
-                              ],
-                            },
-                          ],
-                        },
-                        then: "$commission",
-                      },
-                    ],
-                    default: "$amount",
-                  },
-                },
-              },
-            },
-            {
-              $addFields: {
-                calculatedAmount: {
-                  $switch: {
-                    branches: [
-                      {
-                        case: { $eq: ["$action", "debit"] },
-                        then: { $multiply: ["$amount", -1] },
-                      },
-                      {
-                        case: { $eq: ["$action", "credit"] },
-                        then: "$amount",
-                      },
-                    ],
-                    default: "$amount",
-                  },
-                },
-                label: {
-                  $switch: {
-                    branches: [
-                      {
-                        case: { $eq: ["$type", "adjustment"] },
-                        then: {
-                          $concat: [
-                            {
-                              $cond: {
-                                if: { $eq: [profile, "broker"] },
-                                then: "Commission - ",
-                                else: "",
-                              },
-                            },
-                            { $ifNull: ["$details.description", ""] },
-                            " (",
-                            { $ifNull: ["$details.houseNo", ""] },
-                            ")",
-                          ],
-                        },
-                      },
-                      {
-                        case: { $eq: ["$type", "payment"] },
-                        then: {
-                          $concat: [
-                            "payment",
-                            " ",
-                            {
-                              $cond: {
-                                if: {
-                                  $or: [
-                                    {
-                                      $and: [
-                                        { $eq: ["$action", "debit"] },
-                                        { $eq: ["$profile", "customer"] },
-                                      ],
-                                    },
-                                    {
-                                      $and: [
-                                        { $eq: ["$action", "credit"] },
-                                        { $ne: ["$profile", "customer"] },
-                                      ],
-                                    },
-                                  ],
-                                },
-                                then: "(received)",
-                                else: "(Paid)",
-                              },
-                            },
-                            " - ",
-                            { $ifNull: ["$note", ""] },
-                          ],
-                        },
-                      },
-                    ],
-                    default: "$amount",
-                  },
-                },
-              },
-            },
-            {
-              $sort: {
-                dateObj: 1,
-                createdAt: 1,
-              },
-            },
-          ],
-          as: "transactions",
-        },
-      },
-      {
-        $addFields: {
-          balance: { $sum: "$transactions.calculatedAmount" },
-          credit: {
-            $reduce: {
-              input: "$transactions",
-              initialValue: 0,
-              in: {
-                $cond: [
-                  { $gte: ["$$this.calculatedAmount", 0] },
-                  { $add: ["$$value", "$$this.calculatedAmount"] },
-                  "$$value",
-                ],
-              },
-            },
-          },
-          debit: {
-            $reduce: {
-              input: "$transactions",
-              initialValue: 0,
-              in: {
-                $cond: [
-                  { $lt: ["$$this.calculatedAmount", 0] },
-                  { $add: ["$$value", "$$this.calculatedAmount"] },
-                  "$$value",
-                ],
-              },
-            },
-          },
 
-          currency: { $ifNull: [currency, null] },
-          name: {
-            $cond: {
-              if: { $ne: [currency, null] },
-              then: { $concat: ["$name", " (", currency, ")"] },
-              else: "$name",
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "stores",
-          localField: "store",
-          foreignField: "_id",
-          as: "storeData",
-        },
-      },
-      {
-        $unwind: {
-          path: "$storeData",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $addFields: {
-          storeName: "$storeData.name",
-        },
-      },
-      {
-        $sort: {
-          name: 1,
-        },
-      },
-    ]);
+    let data;
+    if (application === "karama") {
+      data = await getKaramaAccounts({
+        matches,
+        Model: this.Model,
+        transactionMatches,
+        profile,
+        currency,
+      });
+    } else {
+      data = await getAccounts({
+        matches,
+        Model: this.Model,
+        transactionMatches,
+        profile,
+        currency,
+      });
+    }
     let result = data;
     if (select) {
       result = data.map((item) => {
@@ -295,6 +116,7 @@ class AccountsManager {
   }
   async add() {
     const base = AccountSchema.base.parse(this.req.body);
+
     const others = AccountSchema[
       base.profile as keyof typeof AccountSchema
     ].parse(this.req.body);
@@ -359,6 +181,7 @@ class AccountsManager {
       address: isExist.address,
       profile: isExist.profile,
       store: String(isExist.store),
+      currency: isExist.currency,
     };
 
     // create newData
@@ -367,6 +190,7 @@ class AccountsManager {
       phoneNumber: base.phoneNumber,
       email: base.email,
       address: base.address,
+      currency: base.currency,
       profile: base.profile,
       store: String(base.store),
     };
@@ -400,6 +224,8 @@ class AccountsManager {
         >;
         oldData.company = isExist.company;
         newData.company = supplierData.company;
+        oldData.supplierType = isExist.supplierType;
+        newData.supplierType = supplierData.supplierType;
         break;
       }
     }

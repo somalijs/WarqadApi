@@ -1,16 +1,18 @@
-import { ClientSession } from 'mongoose';
-import { ExpressRequest } from '../../../types/Express.js';
+import { ClientSession } from "mongoose";
+import { ExpressRequest } from "../../../types/Express.js";
 import getTransactionModel, {
   TransactionDocument,
-} from '../../../models/Transaction.js';
-import { Model } from 'mongoose';
-import Generators, { addVersion } from '../../../func/Generators.js';
-import adjustmentBox from './Adjustment.js';
-import mongoose from 'mongoose';
-import paymentBox from './Payment.js';
-import addLogs from '../../../services/Logs.js';
-import MoneyTransfer from './MoneyTransfer.js';
-import expensesBox from './Expenses.js';
+} from "../../../models/Transaction.js";
+import { Model } from "mongoose";
+import Generators, { addVersion } from "../../../func/Generators.js";
+import adjustmentBox from "./Adjustment.js";
+import mongoose from "mongoose";
+import paymentBox from "./Payment.js";
+import addLogs from "../../../services/Logs.js";
+import MoneyTransfer from "./MoneyTransfer.js";
+import expensesBox from "./Expenses.js";
+import journalBox from "./journals/journal.js";
+import invoiceList from "./invoices/invoiceList.js";
 
 type Props = {
   db: string;
@@ -33,7 +35,7 @@ class TransactionManager {
     const { id, type, store, ref, date, adjustmentType, profile, free }: any =
       this.req.query;
     const matches: any = {};
-    if (free !== 'true') {
+    if (free !== "true") {
       matches.isDeleted = false;
     }
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
@@ -50,29 +52,29 @@ class TransactionManager {
       },
       {
         $lookup: {
-          from: 'drawers',
-          localField: 'from._id',
-          foreignField: '_id',
-          as: 'fromObj',
+          from: "drawers",
+          localField: "from._id",
+          foreignField: "_id",
+          as: "fromObj",
         },
       },
       {
         $lookup: {
-          from: 'drawers',
-          localField: 'to._id',
-          foreignField: '_id',
-          as: 'toObj',
+          from: "drawers",
+          localField: "to._id",
+          foreignField: "_id",
+          as: "toObj",
         },
       },
       {
         $unwind: {
-          path: '$fromObj',
+          path: "$fromObj",
           preserveNullAndEmptyArrays: true,
         },
       },
       {
         $unwind: {
-          path: '$toObj',
+          path: "$toObj",
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -92,8 +94,8 @@ class TransactionManager {
       isExist.isDeleted = true;
       await isExist.save({ session: this.session || null });
     } else {
-      const refs = await this.Model.distinct('ref');
-      refNo = Generators.IdNums({ ids: refs, prefix: 'ADJ' });
+      const refs = await this.Model.distinct("ref");
+      refNo = Generators.IdNums({ ids: refs, prefix: "ADJ" });
     }
 
     const result = await adjustmentBox({
@@ -105,8 +107,8 @@ class TransactionManager {
 
     return {
       message: ref
-        ? 'Adjustment updated successfully'
-        : 'Adjustment created successfully',
+        ? "Adjustment updated successfully"
+        : "Adjustment created successfully",
       data: result,
     };
   }
@@ -123,8 +125,8 @@ class TransactionManager {
       isExist.isDeleted = true;
       await isExist.save({ session: this.session || null });
     } else {
-      const refs = await this.Model.distinct('ref');
-      refNo = Generators.IdNums({ ids: refs, prefix: 'PAY' });
+      const refs = await this.Model.distinct("ref");
+      refNo = Generators.IdNums({ ids: refs, prefix: "PAY" });
     }
 
     const result = await paymentBox({
@@ -136,8 +138,8 @@ class TransactionManager {
 
     return {
       message: ref
-        ? 'Adjustment updated successfully'
-        : 'Adjustment created successfully',
+        ? "Adjustment updated successfully"
+        : "Adjustment created successfully",
       data: result,
     };
   }
@@ -154,8 +156,8 @@ class TransactionManager {
       isExist.isDeleted = true;
       await isExist.save({ session: this.session || null });
     } else {
-      const refs = await this.Model.distinct('ref');
-      refNo = Generators.IdNums({ ids: refs, prefix: 'PAY' });
+      const refs = await this.Model.distinct("ref");
+      refNo = Generators.IdNums({ ids: refs, prefix: "PAY" });
     }
 
     const result = await MoneyTransfer({
@@ -167,8 +169,8 @@ class TransactionManager {
 
     return {
       message: ref
-        ? 'Adjustment updated successfully'
-        : 'Adjustment created successfully',
+        ? "Adjustment updated successfully"
+        : "Adjustment created successfully",
       data: result,
     };
   }
@@ -185,8 +187,8 @@ class TransactionManager {
       isExist.isDeleted = true;
       await isExist.save({ session: this.session || null });
     } else {
-      const refs = await this.Model.distinct('ref');
-      refNo = Generators.IdNums({ ids: refs, prefix: 'PAY' });
+      const refs = await this.Model.distinct("ref");
+      refNo = Generators.IdNums({ ids: refs, prefix: "PAY" });
     }
 
     const result = await expensesBox({
@@ -198,8 +200,8 @@ class TransactionManager {
 
     return {
       message: ref
-        ? 'Adjustment updated successfully'
-        : 'Adjustment created successfully',
+        ? "Adjustment updated successfully"
+        : "Adjustment created successfully",
       data: result,
     };
   }
@@ -223,10 +225,54 @@ class TransactionManager {
       old: {},
       by: this.req.by!,
       dbName: this.req.db!,
-      action: 'delete',
+      action: "delete",
       session: this.session || null,
     });
     return { message: `Transaction (${isExist.ref}) reversed successfully` };
+  }
+
+  async create({ type, ref }: { ref?: string; type: string }) {
+    let refNo: string;
+    if (ref) {
+      // check if is exist
+      const isExist = await this.Model.findOne({ ref }).session(
+        this.session || null
+      );
+      if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
+      refNo = addVersion(isExist.ref);
+      // mark old as deleted
+      isExist.isDeleted = true;
+      await isExist.save({ session: this.session || null });
+    } else {
+      const refs = await this.Model.distinct("ref");
+      refNo = Generators.IdNums({ ids: refs, prefix: "PAY" });
+    }
+
+    let result;
+    switch (type) {
+      case "invoice-list":
+        result = await invoiceList({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      case "journal":
+        result = await journalBox({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      default:
+        throw new Error("Invalid transaction type");
+    }
+    return {
+      message: ref
+        ? `${type} updated successfully`
+        : `${type} created successfully`,
+      data: result,
+    };
   }
 }
 

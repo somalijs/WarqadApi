@@ -51,10 +51,7 @@ class StoreManger {
       }));
     }
     if (id && !result.length) throw new Error("Store not found");
-    return {
-      data: id ? result[0] : result,
-      title: id ? result[0].name : "All Stores",
-    };
+    return id ? result[0] : result;
   }
 }
 

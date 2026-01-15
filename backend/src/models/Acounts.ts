@@ -14,6 +14,10 @@ const accountSchema = new Schema(
       maxLength: [30, "Name must be less than 30 characters"],
       required: [true, "Name is required"],
     },
+    supplierType: {
+      type: String,
+      enum: Enums.supplierTypes,
+    },
     phoneNumber: {
       type: String,
       trim: true,
@@ -83,6 +87,11 @@ const accountSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    currency: {
+      type: String,
+      enum: Enums.currencies,
+    },
+
     by: {
       type: bySchema,
       required: [true, "Creator is required"],

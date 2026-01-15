@@ -1,12 +1,12 @@
-import puppeteer from 'puppeteer';
-import { ExpressResponse, ExpressRequest } from '../types/Express.js';
+import puppeteer from "puppeteer";
+import { ExpressResponse, ExpressRequest } from "../types/Express.js";
 
-import { renderToStaticMarkup } from 'react-dom/server';
-import PdfTable from '../templates/Pdfs/PdfTable.js';
-import { PdfFooter } from '../templates/Pdfs/PdfFooter.js';
-import { PdfHeader } from '../templates/Pdfs/PdfHeader.js';
-import { PdfTableColumn } from '../templates/Pdfs/types.js';
-import Formats from '../templates/Pdfs/Formats.js';
+import { renderToStaticMarkup } from "react-dom/server";
+import PdfTable from "../templates/Pdfs/PdfTable.js";
+import { PdfFooter } from "../templates/Pdfs/PdfFooter.js";
+import { PdfHeader } from "../templates/Pdfs/PdfHeader.js";
+import { PdfTableColumn } from "../templates/Pdfs/types.js";
+import Formats from "../templates/Pdfs/Formats.js";
 export const AccountsPDF = async ({
   res,
   data,
@@ -16,13 +16,13 @@ export const AccountsPDF = async ({
   res: ExpressResponse;
   data: any;
   req: ExpressRequest;
-  type: 'account' | 'balances';
+  type: "account" | "balances";
 }) => {
   try {
     let datas = data;
     let total = 0;
     let store: any = {};
-    if (type === 'account') {
+    if (type === "account") {
       let runningBalance = 0;
       datas = (data?.transactions || []).map((item: any) => {
         runningBalance += item.calculatedAmount;
@@ -33,7 +33,7 @@ export const AccountsPDF = async ({
         (s) => String(s._id) === String(data?.store)
       );
     }
-    if (type === 'balances') {
+    if (type === "balances") {
       let runningBalance = 0;
       datas = (data?.transactions || []).map((item: any) => {
         runningBalance += item.balance;
@@ -45,133 +45,139 @@ export const AccountsPDF = async ({
       );
     }
     const address = [
-      store?.address || '',
-      store?.phoneNumber || '',
-      store?.email || '',
+      store?.address || "",
+      store?.phoneNumber || "",
+      store?.email || "",
     ];
     let columns: PdfTableColumn<any>[] = [];
-    if (type === 'account') {
+    if (type === "account") {
       columns = [
         {
-          header: 'Date',
-          key: 'date',
-          width: '100px',
+          header: "Date",
+          key: "date",
+          width: "100px",
         },
 
         {
-          header: 'Description',
-          key: 'label',
+          header: "Description",
+          key: "label",
         },
         {
-          header: 'Ref',
-          key: 'ref',
+          header: "Ref",
+          key: "ref",
         },
         {
-          header: 'Amount',
-          key: 'calculatedAmount',
-          align: 'right',
-          width: 'w-fit',
+          header: "Amount",
+          key: "calculatedAmount",
+          align: "right",
+          width: "w-fit",
 
           render: (row) => (
             <span
               className={`font-bold ${
-                row?.calculatedAmount > 0 ? 'text-green-500' : 'text-red-500'
+                row?.calculatedAmount > 0 ? "text-green-500" : "text-red-500"
               }`}
             >
-              {row?.calculatedAmount > 0 ? '+' : '-'}{' '}
+              {row?.calculatedAmount > 0 ? "+" : "-"}{" "}
               <Formats.Amount
                 amount={row.amount}
-                currency={data?.currency ?? 'USD'}
+                currency={data?.currency ?? "USD"}
               />
             </span>
           ),
         },
         {
-          header: 'Running Balance',
-          key: 'runningBalance',
-          align: 'right',
-          width: 'w-fit',
+          header: "Running Balance",
+          key: "runningBalance",
+          align: "right",
+          width: "w-fit",
           calculateTotal: true,
           formatTotal: () => (
             <Formats.Amount
               amount={Number(total) || 0}
-              currency={data?.currency ?? 'USD'}
+              currency={data?.currency ?? "USD"}
             />
           ),
           render: (row) => (
-            <span className='font-bold'>
+            <span className="font-bold">
               <Formats.Amount
                 amount={Number(row.runningBalance) || 0}
-                currency={data?.currency ?? 'USD'}
+                currency={data?.currency ?? "USD"}
               />
             </span>
           ),
         },
       ];
     }
-    if (type === 'balances') {
+    if (type === "balances") {
       columns = [
         {
-          header: 'Name',
-          key: 'name',
+          header: "Name",
+          key: "name",
         },
         {
-          header: 'Credit',
-          key: 'credit',
+          header: "Store",
+          key: "storeName",
+        },
+        {
+          header: "Credit",
+          key: "credit",
+          calculateTotal: true,
           render: (row) => (
             <span className={`font-bold text-green-500`}>
               <Formats.Amount
                 amount={row.credit}
-                currency={data?.currency ?? 'USD'}
+                currency={data?.currency ?? "USD"}
               />
             </span>
           ),
         },
         {
-          header: 'Debit',
-          key: 'debit',
+          header: "Debit",
+          key: "debit",
+          calculateTotal: true,
           render: (row) => (
             <span className={`font-bold text-red-500`}>
               <Formats.Amount
                 amount={row.debit}
-                currency={data?.currency ?? 'USD'}
+                currency={data?.currency ?? "USD"}
               />
             </span>
           ),
         },
         {
-          header: 'Amount',
-          key: 'balance',
-          align: 'right',
-          width: 'w-fit',
+          header: "Amount",
+          key: "balance",
+          align: "right",
+          width: "w-fit",
 
           render: (row) => (
             <span className={`font-bold `}>
               <Formats.Amount
                 amount={row.balance}
-                currency={data?.currency ?? 'USD'}
+                currency={data?.currency ?? "USD"}
               />
             </span>
           ),
         },
         {
-          header: 'Running Balance',
-          key: 'runningBalance',
-          align: 'right',
-          width: 'w-fit',
+          header: "Running Balance",
+          key: "runningBalance",
+          align: "right",
+          width: "w-fit",
 
           calculateTotal: true,
           formatTotal: () => (
             <Formats.Amount
               amount={Number(total) || 0}
-              currency={data?.currency ?? 'USD'}
+              currency={data?.currency ?? "USD"}
             />
           ),
           render: (row) => (
-            <span className='font-bold'>
+            <span className="font-bold">
               <Formats.Amount
                 amount={Number(row.runningBalance) || 0}
-                currency={data?.currency ?? 'USD'}
+                currency={data?.currency ?? "USD"}
               />
             </span>
           ),
@@ -179,39 +185,39 @@ export const AccountsPDF = async ({
       ];
     }
     const renderHTML = () =>
-      '<!DOCTYPE html>' +
+      "<!DOCTYPE html>" +
       renderToStaticMarkup(
         <html>
           <head>
-            <meta charSet='UTF-8' />s<title>{`${type} Report`}</title>
+            <meta charSet="UTF-8" />s<title>{`${type} Report`}</title>
             {/* Tailwind CDN */}
-            <script src='https://cdn.tailwindcss.com'></script>
+            <script src="https://cdn.tailwindcss.com"></script>
           </head>
-          <body className='font-sans text-gray-900'>
+          <body className="font-sans text-gray-900">
             <div
               style={{
-                width: '210mm',
-                minHeight: '297mm',
-                backgroundColor: '#fff',
-                padding: '10mm', // Reduced padding from 20mm
+                width: "210mm",
+                minHeight: "297mm",
+                backgroundColor: "#fff",
+                padding: "10mm", // Reduced padding from 20mm
                 boxShadow:
-                  '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                borderRadius: '2px',
-                display: 'flex',
-                flexDirection: 'column',
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                borderRadius: "2px",
+                display: "flex",
+                flexDirection: "column",
               }}
             >
               <PdfHeader
-                companyName={store?.name ?? 'System'}
+                companyName={req.application?.name || "My Company"}
                 companyAddress={address}
-                accountName={data?.name ?? 'N/a'}
+                accountName={data?.name ?? "N/a"}
               />
 
               <div style={{ flex: 1 }}>
                 <PdfTable data={datas} columns={columns} />
               </div>
 
-              <PdfFooter generatedBy={req?.names ?? 'System'} />
+              <PdfFooter generatedBy={req?.names ?? "System"} />
             </div>
           </body>
         </html>
@@ -220,24 +226,24 @@ export const AccountsPDF = async ({
     const html = renderHTML();
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     const page = await browser.newPage();
 
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    await page.setContent(html, { waitUntil: "networkidle0" });
 
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+    const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
     await browser.close();
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="item.pdf"');
-    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="item.pdf"');
+    res.setHeader("Content-Length", pdfBuffer.length);
     console.log(`pdfBuffer.length: ${pdfBuffer.length}`);
     res.end(pdfBuffer);
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error("Error generating PDF:", error);
     res
       .status(400)
-      .json({ message: 'Failed to generate PDF', error: error?.toString() });
+      .json({ message: "Failed to generate PDF", error: error?.toString() });
   }
 };

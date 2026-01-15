@@ -1,13 +1,13 @@
-import { ClientSession, Model } from 'mongoose';
+import { ClientSession, Model } from "mongoose";
 
-import { ExpressRequest } from '../../../types/Express.js';
-import AccountSchema from './schema.js';
-import addLogs from '../../../services/Logs.js';
-import getStoreModel from '../../../models/Store.js';
-import mongoose from 'mongoose';
-import getDrawerModel, { DrawerDocument } from '../../../models/drawers.js';
-import { getDateRange } from '../../../func/Date.js';
-import { getDrawers } from './helpers/getAccounts.js';
+import { ExpressRequest } from "../../../types/Express.js";
+import AccountSchema from "./schema.js";
+import addLogs from "../../../services/Logs.js";
+import getStoreModel from "../../../models/Store.js";
+import mongoose from "mongoose";
+import getDrawerModel, { DrawerDocument } from "../../../models/drawers.js";
+import { getDateRange } from "../../../func/Date.js";
+import { getDrawers } from "./helpers/getAccounts.js";
 
 type Props = {
   db: string;
@@ -37,7 +37,7 @@ class DrawerManager {
     if (type) matches.type = type;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
     if (currency) matches.currency = currency;
-    if (this.req?.role !== 'admin') {
+    if (this.req?.role !== "admin") {
       matches.store = {
         $in: (this.req?.storeIds || []).map(
           (item) => new mongoose.Types.ObjectId(item)
@@ -56,14 +56,14 @@ class DrawerManager {
       {
         $addFields: {
           name: {
-            $concat: ['$name', ' (', '$currency', ')'],
+            $concat: ["$name", " (", "$currency", ")"],
           },
         },
       },
       {
         $lookup: {
-          from: 'transactions',
-          let: { drawerId: '$_id', drawerCurrency: '$currency' },
+          from: "transactions",
+          let: { drawerId: "$_id", drawerCurrency: "$currency" },
           pipeline: [
             {
               $match: {
@@ -71,20 +71,20 @@ class DrawerManager {
                 ...transactionMatches,
                 $expr: {
                   $or: [
-                    { $eq: ['$from._id', '$$drawerId'] },
-                    { $eq: ['$to._id', '$$drawerId'] },
+                    { $eq: ["$from._id", "$$drawerId"] },
+                    { $eq: ["$to._id", "$$drawerId"] },
                   ],
                 },
               },
             },
             {
               $addFields: {
-                originalAmount: '$amount',
+                originalAmount: "$amount",
                 amount: {
                   $cond: {
-                    if: { $ne: ['$currency', '$$drawerCurrency'] },
-                    then: { $ifNull: ['$exchangedAmount', 0] },
-                    else: '$amount',
+                    if: { $ne: ["$currency", "$$drawerCurrency"] },
+                    then: { $ifNull: ["$exchangedAmount", 0] },
+                    else: "$amount",
                   },
                 },
               },
@@ -93,125 +93,125 @@ class DrawerManager {
               $addFields: {
                 calculatedAmount: {
                   $cond: {
-                    if: { $eq: ['$from._id', '$$drawerId'] },
-                    then: { $multiply: ['$amount', -1] },
-                    else: '$amount',
+                    if: { $eq: ["$from._id", "$$drawerId"] },
+                    then: { $multiply: ["$amount", -1] },
+                    else: "$amount",
                   },
                 },
                 label: {
                   $switch: {
                     branches: [
                       {
-                        case: { $eq: ['$type', 'payment'] },
+                        case: { $eq: ["$type", "payment"] },
                         then: {
                           $concat: [
-                            '$profile',
-                            ' ',
-                            'payment',
-                            ' ',
+                            "$profile",
+                            " ",
+                            "payment",
+                            " ",
                             {
                               $cond: {
                                 if: {
                                   $or: [
                                     {
                                       $and: [
-                                        { $eq: ['$action', 'debit'] },
-                                        { $eq: ['$profile', 'customer'] },
+                                        { $eq: ["$action", "debit"] },
+                                        { $eq: ["$profile", "customer"] },
                                       ],
                                     },
                                     {
                                       $and: [
-                                        { $eq: ['$action', 'credit'] },
-                                        { $ne: ['$profile', 'customer'] },
+                                        { $eq: ["$action", "credit"] },
+                                        { $ne: ["$profile", "customer"] },
                                       ],
                                     },
                                   ],
                                 },
-                                then: '(received)',
-                                else: '(Paid)',
+                                then: "(received)",
+                                else: "(Paid)",
                               },
                             },
-                            ' - ',
-                            { $ifNull: ['$note', ''] },
+                            " - ",
+                            { $ifNull: ["$note", ""] },
                           ],
                         },
                       },
                       {
-                        case: { $eq: ['$type', 'money-transfer'] },
+                        case: { $eq: ["$type", "money-transfer"] },
                         then: {
                           $concat: [
-                            'Money Transfer from (',
+                            "Money Transfer from (",
                             {
-                              $ifNull: ['$from.name', 'Unknown'],
+                              $ifNull: ["$from.name", "Unknown"],
                             },
-                            ') to (',
+                            ") to (",
                             {
-                              $ifNull: ['$to.name', 'Unknown'],
+                              $ifNull: ["$to.name", "Unknown"],
                             },
-                            ')',
+                            ")",
                           ],
                         },
                       },
                       {
-                        case: { $eq: ['$type', 'expenses'] },
+                        case: { $eq: ["$type", "expenses"] },
                         then: {
-                          $concat: ['Expenses - ', '$details.description'],
+                          $concat: ["Expenses - ", "$details.description"],
                         },
                       },
                       {
-                        case: { $eq: ['$type', 'adjustment'] },
-                        then: '$details.description',
+                        case: { $eq: ["$type", "adjustment"] },
+                        then: "$details.description",
                       },
                     ],
-                    default: 'Transaction Unknown',
+                    default: "Transaction Unknown",
                   },
                 },
                 line: {
                   $cond: {
-                    if: { $eq: ['$from._id', '$$drawerId'] },
-                    then: 'debit',
-                    else: 'credit',
+                    if: { $eq: ["$from._id", "$$drawerId"] },
+                    then: "debit",
+                    else: "credit",
                   },
                 },
                 action: {
                   $cond: {
-                    if: { $eq: ['$from._id', '$$drawerId'] },
-                    then: 'debit',
-                    else: 'credit',
+                    if: { $eq: ["$from._id", "$$drawerId"] },
+                    then: "debit",
+                    else: "credit",
                   },
                 },
-                currency: '$$drawerCurrency',
+                currency: "$$drawerCurrency",
               },
             },
           ],
-          as: 'transactions',
+          as: "transactions",
         },
       },
       {
         $addFields: {
-          balance: { $sum: '$transactions.calculatedAmount' },
+          balance: { $sum: "$transactions.calculatedAmount" },
           credit: {
             $reduce: {
-              input: '$transactions',
+              input: "$transactions",
               initialValue: 0,
               in: {
                 $cond: [
-                  { $gte: ['$$this.calculatedAmount', 0] },
-                  { $add: ['$$value', '$$this.calculatedAmount'] },
-                  '$$value',
+                  { $gte: ["$$this.calculatedAmount", 0] },
+                  { $add: ["$$value", "$$this.calculatedAmount"] },
+                  "$$value",
                 ],
               },
             },
           },
           debit: {
             $reduce: {
-              input: '$transactions',
+              input: "$transactions",
               initialValue: 0,
               in: {
                 $cond: [
-                  { $lt: ['$$this.calculatedAmount', 0] },
-                  { $add: ['$$value', '$$this.calculatedAmount'] },
-                  '$$value',
+                  { $lt: ["$$this.calculatedAmount", 0] },
+                  { $add: ["$$value", "$$this.calculatedAmount"] },
+                  "$$value",
                 ],
               },
             },
@@ -237,15 +237,18 @@ class DrawerManager {
       });
     }
 
-    return id ? result[0] : result;
+    return {
+      data: id ? result[0] : result,
+      title: id ? result[0].name : "All Drawers",
+    };
   }
   async add() {
     const base = AccountSchema.base.parse(this.req.body);
 
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== 'admin') {
+    if (this.req?.role !== "admin") {
       if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error('You are not authorized For this Store');
+        throw new Error("You are not authorized For this Store");
     }
     const createData = {
       ...base,
@@ -262,12 +265,12 @@ class DrawerManager {
 
     // add logs
     await addLogs({
-      model: { type: 'drawer', _id: created[0]._id },
+      model: { type: "drawer", _id: created[0]._id },
       data: created[0],
       old: {},
       by: this.req.by!,
       dbName: this.db,
-      action: 'create',
+      action: "create",
       session: this?.session || null,
     });
     return created[0];
@@ -280,9 +283,9 @@ class DrawerManager {
     // validate base
     const base = AccountSchema.base.parse(rawBody);
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== 'admin') {
+    if (this.req?.role !== "admin") {
       if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error('You are not authorized For this Store');
+        throw new Error("You are not authorized For this Store");
     }
 
     // check if account exists
@@ -311,7 +314,7 @@ class DrawerManager {
 
     // check if data changed
     if (JSON.stringify(oldData) === JSON.stringify(newData)) {
-      throw new Error('No changes made');
+      throw new Error("No changes made");
     }
     newData.store = isExist.store;
     // replace the document
@@ -325,12 +328,12 @@ class DrawerManager {
 
     // add logs
     await addLogs({
-      model: { type: 'drawer', _id: updated._id },
+      model: { type: "drawer", _id: updated._id },
       data: updated,
       old: isExist,
       by: this.req.by!,
       dbName: this.db,
-      action: 'update',
+      action: "update",
       session: this.session,
     });
 
@@ -339,8 +342,8 @@ class DrawerManager {
 
   async delete() {
     const { id } = this.req.params;
-    if (this.req.role !== 'admin') {
-      throw new Error('Only Admins Can Delete Drawer');
+    if (this.req.role !== "admin") {
+      throw new Error("Only Admins Can Delete Drawer");
     }
     const isExist = await this.Model.findOne({
       _id: id,
@@ -369,12 +372,12 @@ class DrawerManager {
 
     // add logs
     await addLogs({
-      model: { type: 'drawer', _id: deleted._id },
+      model: { type: "drawer", _id: deleted._id },
       data: deleted,
       old: isExist,
       by: this.req.by!,
       dbName: this.db,
-      action: 'delete',
+      action: "delete",
       session: this.session,
     });
 

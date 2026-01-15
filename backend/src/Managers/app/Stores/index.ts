@@ -1,6 +1,6 @@
-import mongoose, { Model } from 'mongoose';
-import getStoreModel, { StoreDocument } from '../../../models/Store.js';
-import { ExpressRequest } from '../../../types/Express.js';
+import mongoose, { Model } from "mongoose";
+import getStoreModel, { StoreDocument } from "../../../models/Store.js";
+import { ExpressRequest } from "../../../types/Express.js";
 
 type StoreMangerProps = {
   db: string;
@@ -21,12 +21,12 @@ class StoreManger {
       search?: string;
       select?: string;
     };
-    if (req.role !== 'admin') matches._id = { $in: [req.stores] };
+    if (req.role !== "admin") matches._id = { $in: [req.stores] };
     if (type) matches.type = type;
     if (subType) matches.subType = subType;
     if (id) matches._id = new mongoose.Types.ObjectId(id);
     if (search) {
-      const or: any[] = [{ name: { $regex: search, $options: 'i' } }];
+      const or: any[] = [{ name: { $regex: search, $options: "i" } }];
 
       if (mongoose.Types.ObjectId.isValid(search)) {
         or.push({ _id: new mongoose.Types.ObjectId(search) });
@@ -34,15 +34,15 @@ class StoreManger {
 
       matches.$or = or;
     }
-    if (id && req.role !== 'admin') {
+    if (id && req.role !== "admin") {
       const storeIds = req.storeIds || [];
       if (!storeIds.includes(id)) {
-        throw new Error('You are not authorized to access this store');
+        throw new Error("You are not authorized to access this store");
       }
     }
     const stores = await this.Model.aggregate([{ $match: matches }]);
     let result = stores;
-    if (select === 'true') {
+    if (select === "true") {
       result = stores.map((store) => ({
         value: store._id,
         label: store.name,
@@ -50,8 +50,11 @@ class StoreManger {
         subType: store.subType,
       }));
     }
-    if (id && !result.length) throw new Error('Store not found');
-    return id ? result[0] : result;
+    if (id && !result.length) throw new Error("Store not found");
+    return {
+      data: id ? result[0] : result,
+      title: id ? result[0].name : "All Stores",
+    };
   }
 }
 

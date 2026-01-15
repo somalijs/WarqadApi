@@ -28,12 +28,20 @@ class AccountsManager {
     this.db = db;
   }
   async get() {
-    const { id, profile, select, store, currency, from, to }: any =
+    const { id, profile, select, store, currency, from, to, search }: any =
       this.req.query;
     const matches: any = {
       isDeleted: false,
     };
+    if (search) {
+      const or: any[] = [{ name: { $regex: search, $options: "i" } }];
 
+      if (mongoose.Types.ObjectId.isValid(search)) {
+        or.push({ _id: new mongoose.Types.ObjectId(search) });
+      }
+
+      matches.$or = or;
+    }
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (profile) matches.profile = profile;
     if (store) {

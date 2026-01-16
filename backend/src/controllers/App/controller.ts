@@ -17,6 +17,7 @@ const schema = z.object({
     "drawer",
     "transaction",
     "get-statement",
+    "get-accounts-balance",
   ]),
 });
 
@@ -44,14 +45,17 @@ const appPrivateController = expressAsyncHandler(
     let resData;
     const { type } = schema.parse(req.params);
     const { pdf } = req.query;
+    const Account = new AccountsManager({ db: req.db!, req });
     switch (type) {
       case "stores":
         const Store = new StoreManger({ db: req.db! });
         resData = await Store.get(req);
         break;
       case "accounts":
-        const Account = new AccountsManager({ db: req.db!, req });
         resData = await Account.get();
+        break;
+      case "get-accounts-balance":
+        resData = await Account.getBalances();
         break;
       case "drawer":
         const Drawer = new DrawerManager({ db: req.db!, req });

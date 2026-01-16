@@ -316,6 +316,36 @@ class AccountsManager {
 
     return deleted;
   }
+  async getBalances() {
+    const schema = z.object({
+      profile: z.enum(["customer", "supplier", "employee", "shop"]),
+      id: z.string(),
+      application: z.string().optional(),
+    });
+    const { profile, id, application } = schema.parse(this.req.query);
+    const matches: any = {
+      isDeleted: false,
+      _id: new mongoose.Types.ObjectId(id),
+      profile,
+    };
+    let resData;
+    if (application === "karama") {
+      resData = await getKaramaAccounts({
+        matches,
+        Model: this.Model,
+        transactionMatches: {},
+        profile,
+      });
+    } else {
+      resData = await getAccounts({
+        matches,
+        Model: this.Model,
+        transactionMatches: {},
+        profile,
+      });
+    }
+    return resData[0];
+  }
 }
 
 export default AccountsManager;

@@ -237,10 +237,7 @@ class DrawerManager {
       });
     }
 
-    return {
-      data: id ? result[0] : result,
-      title: id ? result[0].name : "All Drawers",
-    };
+    return id ? result[0] : result;
   }
   async add() {
     const base = AccountSchema.base.parse(this.req.body);

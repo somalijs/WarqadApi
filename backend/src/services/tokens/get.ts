@@ -2,15 +2,15 @@ import { ExpressRequest } from "../../types/Express.js";
 import jwt from "jsonwebtoken";
 type GetTokenParam = {
   req: ExpressRequest;
-  name?: string;
+  name: string;
   throwError?: boolean;
 };
 const getToken = async <T extends object & { decoded: string }>({
   req,
+  name,
   throwError = false,
 }: GetTokenParam): Promise<T> => {
-  let token;
-  //  = req.cookies[name];
+  let token = req.cookies[name];
   if (!token && req.headers.authorization) {
     const parts = req.headers.authorization.split(" ");
     if (parts.length === 2 && parts[0] === "Bearer") {

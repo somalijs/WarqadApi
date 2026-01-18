@@ -32,13 +32,23 @@ class TransactionManager {
     this.db = db;
   }
   async get() {
-    const { id, type, store, ref, date, adjustmentType, profile, free }: any =
-      this.req.query;
+    const {
+      id,
+      type,
+      store,
+      ref,
+      date,
+      adjustmentType,
+      profile,
+      free,
+      invoiceList,
+    }: any = this.req.query;
     const matches: any = {};
     if (free !== "true") {
       matches.isDeleted = false;
     }
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
+    if (invoiceList) matches.invoiceList = invoiceList;
     if (type) matches.type = type;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
     if (ref) matches.ref = ref;

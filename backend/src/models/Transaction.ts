@@ -13,6 +13,13 @@ const transactionSchema = new Schema(
       enum: Enums.transactionTypes,
       required: [true, "Transaction type is required"],
     },
+    invoiceList: {
+      type: String,
+      enum: Enums.invoiceListTypes,
+      function(this: any) {
+        return this.type === "invoice-list";
+      },
+    },
     amount: {
       type: Number,
       required: [true, "Transaction amount is required"],

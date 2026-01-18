@@ -16,7 +16,7 @@ const invoiceList = async ({
   ref: string;
   session: ClientSession;
 }) => {
-  const { currency, list, date, store, note, profile } =
+  const { currency, invoiceList, date, store, note, profile } =
     InvoiceSchema.list.parse(req.body);
   const Account = getAccountModel(req.db!);
   const Store = getStoreModel(req.db!);
@@ -56,6 +56,7 @@ const invoiceList = async ({
     store: isStore._id,
     currency,
     type: "invoice-list",
+    invoiceList,
     [profile]: {
       _id: isAccount._id,
       name: isAccount.name,
@@ -67,12 +68,25 @@ const invoiceList = async ({
     profile,
   };
 
-  const lists = list.map((item) => {
-    return {
-      ...item,
-      total: item.price * item.quantity,
-    };
-  });
+  let lists;
+  if (invoiceList === "product") {
+    const { list } = InvoiceSchema.product.parse(req.body);
+    lists = list.map((item) => {
+      return {
+        ...item,
+        total: item.price * item.quantity,
+      };
+    });
+  } else {
+    const { list } = InvoiceSchema.cargo.parse(req.body);
+    lists = list.map((item) => {
+      return {
+        ...item,
+        total: item.cbm * item.price,
+      };
+    });
+  }
+
   const amount = lists.reduce((acc, curr) => acc + curr.total, 0);
   createData.amount = amount;
   createData.list = lists;

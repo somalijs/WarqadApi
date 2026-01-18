@@ -38,7 +38,7 @@ const Enums = {
 
   taxTypes: ["exclusive", "inclusive"],
   countries: ["Kenya", "Tanzania", "Somalia"],
-
+  invoiceListTypes: ["cargo", "product"] as const,
   accountProfiles: [
     "customer",
     "supplier",

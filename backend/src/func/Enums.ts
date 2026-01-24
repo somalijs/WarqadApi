@@ -60,7 +60,9 @@ const Enums = {
     "expenses",
     "invoice-list",
     "journal",
+    "house-invoice",
   ] as const,
+  houseInvoices: ["rent", "sale"] as const,
   adjustmentTypes: [
     "customer-broker-invoice",
     "broker-invoice",

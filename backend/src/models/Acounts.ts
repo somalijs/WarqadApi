@@ -11,7 +11,6 @@ const accountSchema = new Schema(
       trim: true,
       lowercase: true,
       minLength: [2, "Name must be at least 2 characters"],
-      maxLength: [30, "Name must be less than 30 characters"],
       required: [true, "Name is required"],
     },
     supplierType: {
@@ -99,7 +98,7 @@ const accountSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 accountSchema.index({ name: 1, profile: 1, store: 1 }, { unique: true });
@@ -133,7 +132,7 @@ export type EmployeeFieldsType = Pick<
 const getAccountModel = (db: string): Model<AccountDocument> => {
   return getDatabaseInstance(db).model<AccountDocument>(
     "Accounts",
-    accountSchema
+    accountSchema,
   );
 };
 

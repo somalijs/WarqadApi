@@ -20,6 +20,13 @@ const transactionSchema = new Schema(
         return this.type === "invoice-list";
       },
     },
+    houseInvoice: {
+      type: String,
+      enum: Enums.houseInvoices,
+      function(this: any) {
+        return this.type === "house-invoice";
+      },
+    },
     amount: {
       type: Number,
       required: [true, "Transaction amount is required"],
@@ -120,7 +127,7 @@ const transactionSchema = new Schema(
       required: function (this: any) {
         return (
           this.adjustmentType === "customer-broker-invoice" ||
-          this.profile === "customer"
+          this.type === "house-invoice"
         );
       },
     },
@@ -181,7 +188,7 @@ const transactionSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 // make index
 transactionSchema.index({ ref: 1 }, { unique: true });
@@ -209,7 +216,7 @@ transactionSchema.pre<any>("save", function (next) {
 const getTransactionModel = (db: string): Model<TransactionDocument> => {
   return getDatabaseInstance(db).model<TransactionDocument>(
     "Transaction",
-    transactionSchema
+    transactionSchema,
   );
 };
 

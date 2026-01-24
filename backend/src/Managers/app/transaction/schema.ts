@@ -62,6 +62,7 @@ const TransactionSchema = {
       "expenses",
       "invoice-list",
       "journal",
+      "house-invoice",
     ]),
   }),
   shop: z.object({

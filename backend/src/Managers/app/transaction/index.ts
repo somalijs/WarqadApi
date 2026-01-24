@@ -13,6 +13,7 @@ import MoneyTransfer from "./MoneyTransfer.js";
 import expensesBox from "./Expenses.js";
 import journalBox from "./journals/journal.js";
 import invoiceList from "./invoices/invoiceList.js";
+import houseInvoice from "./invoices/houseInvoice.js";
 
 type Props = {
   db: string;
@@ -42,6 +43,7 @@ class TransactionManager {
       profile,
       free,
       invoiceList,
+      houseInvoice,
     }: any = this.req.query;
     const matches: any = {};
     if (free !== "true") {
@@ -55,6 +57,7 @@ class TransactionManager {
     if (date) matches.date = date;
     if (adjustmentType) matches.adjustmentType = adjustmentType;
     if (profile) matches.profile = profile;
+    if (houseInvoice) matches.houseInvoice = houseInvoice;
 
     const data = await this.Model.aggregate([
       {
@@ -96,7 +99,7 @@ class TransactionManager {
     if (ref) {
       // check if is exist
       const isExist = await this.Model.findOne({ ref }).session(
-        this.session || null
+        this.session || null,
       );
       if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
       refNo = addVersion(isExist.ref);
@@ -127,7 +130,7 @@ class TransactionManager {
     if (ref) {
       // check if is exist
       const isExist = await this.Model.findOne({ ref }).session(
-        this.session || null
+        this.session || null,
       );
       if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
       refNo = addVersion(isExist.ref);
@@ -158,7 +161,7 @@ class TransactionManager {
     if (ref) {
       // check if is exist
       const isExist = await this.Model.findOne({ ref }).session(
-        this.session || null
+        this.session || null,
       );
       if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
       refNo = addVersion(isExist.ref);
@@ -189,7 +192,7 @@ class TransactionManager {
     if (ref) {
       // check if is exist
       const isExist = await this.Model.findOne({ ref }).session(
-        this.session || null
+        this.session || null,
       );
       if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
       refNo = addVersion(isExist.ref);
@@ -219,7 +222,7 @@ class TransactionManager {
     const { id } = this.req.params;
     // check if is exist
     const isExist = await this.Model.findOne({ _id: id }).session(
-      this.session || null
+      this.session || null,
     );
     if (!isExist) throw new Error(`Reference  is not exist`);
     if (isExist.isDeleted)
@@ -246,7 +249,7 @@ class TransactionManager {
     if (ref) {
       // check if is exist
       const isExist = await this.Model.findOne({ ref }).session(
-        this.session || null
+        this.session || null,
       );
       if (!isExist) throw new Error(`Reference (${ref}) is not exist`);
       refNo = addVersion(isExist.ref);
@@ -269,6 +272,13 @@ class TransactionManager {
         break;
       case "journal":
         result = await journalBox({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      case "house-invoice":
+        result = await houseInvoice({
           req: this.req,
           ref: refNo,
           session: this.session!,

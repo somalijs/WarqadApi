@@ -40,7 +40,7 @@ class DrawerManager {
     if (this.req?.role !== "admin") {
       matches.store = {
         $in: (this.req?.storeIds || []).map(
-          (item) => new mongoose.Types.ObjectId(item)
+          (item) => new mongoose.Types.ObjectId(item),
         ),
       };
     }
@@ -75,6 +75,20 @@ class DrawerManager {
                     { $eq: ["$to._id", "$$drawerId"] },
                   ],
                 },
+              },
+            },
+            {
+              $lookup: {
+                from: "stores",
+                localField: "store",
+                foreignField: "_id",
+                as: "storeData",
+              },
+            },
+            {
+              $unwind: {
+                path: "$storeData",
+                preserveNullAndEmptyArrays: true,
               },
             },
             {
@@ -161,6 +175,16 @@ class DrawerManager {
                       {
                         case: { $eq: ["$type", "adjustment"] },
                         then: "$details.description",
+                      },
+                      {
+                        case: { $eq: ["$houseInvoice", "rent"] },
+                        then: {
+                          $concat: [
+                            "$storeData.name",
+                            " - ",
+                            "$details.description",
+                          ],
+                        },
                       },
                     ],
                     default: "Transaction Unknown",
@@ -257,7 +281,7 @@ class DrawerManager {
     if (!store) throw new Error(`Store of id (${createData.store}) not found`);
     const created = await this.Model.create(
       [{ ...createData, by: this.req.by! }],
-      { session: this?.session || null }
+      { session: this?.session || null },
     );
 
     // add logs
@@ -287,7 +311,7 @@ class DrawerManager {
 
     // check if account exists
     const isExist = await this.Model.findById(id).session(
-      this?.session || null
+      this?.session || null,
     );
     if (!isExist) throw new Error(`${base.type} of id (${id}) not found`);
 
@@ -318,7 +342,7 @@ class DrawerManager {
     const updated = await this.Model.findOneAndReplace(
       { _id: isExist._id },
       { ...newData, by: this.req.by! },
-      { session: this.session, new: true, runValidators: true }
+      { session: this.session, new: true, runValidators: true },
     );
 
     if (!updated) throw new Error(`Error updating ${base.type} of id (${id})`);
@@ -363,7 +387,7 @@ class DrawerManager {
       {
         isDeleted: true,
       },
-      { session: this?.session || null, new: true }
+      { session: this?.session || null, new: true },
     );
     if (!deleted) throw new Error(`Error deleting drawer of id (${id})`);
 

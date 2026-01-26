@@ -14,6 +14,7 @@ import expensesBox from "./Expenses.js";
 import journalBox from "./journals/journal.js";
 import invoiceList from "./invoices/invoiceList.js";
 import houseInvoice from "./invoices/houseInvoice.js";
+import houseInvoiceAgg from "./helpers/houseInvoiceAgg.js";
 
 type Props = {
   db: string;
@@ -44,6 +45,8 @@ class TransactionManager {
       free,
       invoiceList,
       houseInvoice,
+      detailsMonth,
+      detailsYear,
     }: any = this.req.query;
     const matches: any = {};
     if (free !== "true") {
@@ -58,7 +61,12 @@ class TransactionManager {
     if (adjustmentType) matches.adjustmentType = adjustmentType;
     if (profile) matches.profile = profile;
     if (houseInvoice) matches.houseInvoice = houseInvoice;
-
+    if (detailsMonth && detailsYear) {
+      matches["details.month"] = Number(detailsMonth);
+      matches["details.year"] = Number(detailsYear);
+    }
+    let customAgg: any[] = [];
+    if (houseInvoice) customAgg = houseInvoiceAgg();
     const data = await this.Model.aggregate([
       {
         $match: matches,
@@ -89,6 +97,13 @@ class TransactionManager {
         $unwind: {
           path: "$toObj",
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      ...customAgg,
+      {
+        $sort: {
+          dateObj: 1,
+          createdAt: 1,
         },
       },
     ]);
@@ -284,6 +299,7 @@ class TransactionManager {
           session: this.session!,
         });
         break;
+
       default:
         throw new Error("Invalid transaction type");
     }

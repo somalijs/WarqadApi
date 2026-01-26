@@ -4,6 +4,9 @@ import { ExpressRequest } from "../../../../types/Express.js";
 import InvoiceSchema from "./schema.js";
 import getAccountModel from "../../../../models/Acounts.js";
 import addLogs from "../../../../services/Logs.js";
+import getTenantModel from "../../../../models/Tenant.js";
+import TransactionSchema from "../schema.js";
+import getDrawerModel from "../../../../models/drawers.js";
 
 const houseInvoice = async ({
   req,
@@ -14,29 +17,78 @@ const houseInvoice = async ({
   ref: string;
   session: ClientSession;
 }) => {
-  const { customer, date, type, amount, currency, note } =
-    InvoiceSchema.houseInvoiceSchema.parse(req.body);
-  let details;
+  const {
+    date,
+    type,
+    amount: amountBody,
+    currency: currencyBody,
+    note,
+    action,
+  } = InvoiceSchema.houseInvoiceSchema.parse(req.body);
+  let details: any;
   let broker;
   let commission;
+  let customerId;
+  let amount = amountBody;
+  let tenantId;
+  let currency = currencyBody;
   if (type === "rent") {
-    const { details: rentDetails } =
+    const { details: rentDetails, tenant } =
       InvoiceSchema.houseInvoiceRentDetails.parse(req.body);
     details = rentDetails;
+    const isTenant = await getTenantModel(req.db!)
+      .findOne({
+        _id: tenant,
+        isDeleted: false,
+      })
+      .session(session);
+    if (!isTenant) {
+      throw new Error("Tenant not found");
+    }
+    if (isTenant.endDate) {
+      throw new Error("Tenant is Moved");
+    }
+    customerId = isTenant.customer;
+    tenantId = isTenant._id;
+    amount = isTenant.amount;
+    details.floor = isTenant.floor;
+    details.houseNo = isTenant.no;
+    details.description = `Rent for ${rentDetails.month}/${rentDetails.year} (Floor ${isTenant.floor}, House ${isTenant.no})`;
+    // check is any transaction exists
+    const isTransaction = await getTransactionModel(req.db!)
+      .findOne({
+        tenant: tenant,
+        houseInvoice: "rent",
+        "details.month": rentDetails.month,
+        "details.year": rentDetails.year,
+        isDeleted: false,
+        action,
+      })
+      .session(session);
+    if (isTransaction) {
+      throw new Error(
+        action === "debit"
+          ? `Tenant already Paid ${rentDetails.month}/${rentDetails.year}`
+          : `Tenant already Invoiced ${rentDetails.month}/${rentDetails.year}`,
+      );
+    }
+    currency = "KSH";
   } else {
     const {
       details: saleDetails,
       broker: saleBroker,
       commission: saleCommission,
+      customer: saleCustomer,
     } = InvoiceSchema.houseInvoiceSaleDetails.parse(req.body);
     details = saleDetails;
     broker = saleBroker;
     commission = saleCommission;
+    customerId = saleCustomer;
   }
-  // check if customer exist
+
   const isCustomer = await getAccountModel(req.db!)
     .findOne({
-      _id: customer,
+      _id: customerId,
       profile: "customer",
       isDeleted: false,
     })
@@ -51,6 +103,7 @@ const houseInvoice = async ({
     type: "house-invoice",
     houseInvoice: type,
     ref,
+    tenant: tenantId,
     note,
     details: details,
     customer: {
@@ -60,9 +113,23 @@ const houseInvoice = async ({
     currency,
     amount,
     by: req.by!,
-    action: "credit",
+    action: action,
     profile: "customer",
   };
+  if (action === "debit") {
+    const { drawer } = TransactionSchema.drawer.parse(req.body);
+    const isDrawer = await getDrawerModel(req.db!).findOne({
+      _id: drawer,
+      isDeleted: false,
+    });
+    if (!isDrawer) {
+      throw new Error("Drawer not found");
+    }
+    transactionData.to = {
+      name: isDrawer.name,
+      _id: isDrawer._id,
+    };
+  }
   // if broker exists
   if (broker) {
     const isBroker = await getAccountModel(req.db!)

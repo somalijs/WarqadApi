@@ -8,9 +8,10 @@ import DrawerManager from "../../Managers/app/drawers/index.js";
 import TransactionSchema from "../../Managers/app/transaction/schema.js";
 
 import TransactionManager from "../../Managers/app/transaction/index.js";
+import RealStateManager from "../../Managers/app/realState/index.js";
 
 const schema = z.object({
-  type: z.enum(["account", "drawer", "transaction"]),
+  type: z.enum(["account", "drawer", "transaction", "real-state"]),
 });
 const appCreateController = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
@@ -66,6 +67,26 @@ const appCreateController = expressAsyncHandler(
             });
           }
           break;
+        case "real-state":
+          const RealState = new RealStateManager({
+            db: req.db!,
+            req,
+            session: session,
+          });
+          const { types: realStateTypes } = z
+            .object({
+              types: z.enum([
+                "add-tenant",
+                "update-tenant",
+                "move-tenant",
+                "delete-tenant",
+              ]),
+            })
+            .parse(req.query);
+          resData = await RealState.create({
+            type: realStateTypes,
+          });
+          break;
         default:
           throw new Error("Invalid type");
       }
@@ -77,7 +98,7 @@ const appCreateController = expressAsyncHandler(
     } finally {
       await session.endSession();
     }
-  }
+  },
 );
 
 export default appCreateController;

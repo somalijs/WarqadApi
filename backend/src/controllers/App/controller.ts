@@ -7,6 +7,7 @@ import AccountsManager from "../../Managers/app/accounts/index.js";
 import DrawerManager from "../../Managers/app/drawers/index.js";
 import TransactionManager from "../../Managers/app/transaction/index.js";
 import { AccountsPDF } from "../../pdfs/AccountsPdf.js";
+import RealStateManager from "../../Managers/app/realState/index.js";
 
 const schema = z.object({
   type: z.enum([
@@ -18,6 +19,7 @@ const schema = z.object({
     "transaction",
     "get-statement",
     "get-accounts-balance",
+    "real-state",
   ]),
 });
 
@@ -38,7 +40,7 @@ const appFreeController = expressAsyncHandler(
         throw new Error("Invalid typea");
     }
     res.status(200).json(resData);
-  }
+  },
 );
 const appPrivateController = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
@@ -64,6 +66,10 @@ const appPrivateController = expressAsyncHandler(
       case "transaction":
         const Transaction = new TransactionManager({ db: req.db!, req });
         resData = await Transaction.get();
+        break;
+      case "real-state":
+        const RealState = new RealStateManager({ db: req.db!, req });
+        resData = await RealState.get();
         break;
       case "get-statement":
         const schemaStatement = z.object({
@@ -113,6 +119,6 @@ const appPrivateController = expressAsyncHandler(
     } else {
       res.status(200).json(resData);
     }
-  }
+  },
 );
 export { appFreeController, appPrivateController };

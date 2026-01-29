@@ -1,14 +1,14 @@
 export function parseDateOrThrow(dateStr: string): Date {
-  const [day, month, year] = dateStr.split('/');
+  const [day, month, year] = dateStr.split("/");
 
   if (!day || !month || !year) {
     throw new Error(`Invalid date format: ${dateStr}`);
   }
 
-  const isoDateStr = `${year.padStart(4, '0')}-${month.padStart(
+  const isoDateStr = `${year.padStart(4, "0")}-${month.padStart(
     2,
-    '0'
-  )}-${day.padStart(2, '0')}`;
+    "0",
+  )}-${day.padStart(2, "0")}`;
   const date = new Date(isoDateStr);
 
   if (isNaN(date.getTime())) {
@@ -30,5 +30,11 @@ export function getDateRange({ from, to }: { from: string; to: string }) {
 export function getDateObject(date: string) {
   const to = parseDateOrThrow(date);
   const res = new Date(to.setHours(0, 0, 0, 0));
+  return res;
+}
+
+export function getEndDate(date: string) {
+  const to = parseDateOrThrow(date);
+  const res = new Date(to.setHours(23, 59, 59, 999));
   return res;
 }

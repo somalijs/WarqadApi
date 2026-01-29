@@ -68,6 +68,9 @@ const TransactionSchema = {
   shop: z.object({
     shop: zodFields.objectId("shop"),
   }),
+  exchangeRate: z.object({
+    exchangeRate: z.number().min(0),
+  }),
 };
 
 export default TransactionSchema;

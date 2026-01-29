@@ -76,10 +76,10 @@ const appCreateController = expressAsyncHandler(
           const { types: realStateTypes } = z
             .object({
               types: z.enum([
-                "add-tenant",
-                "update-tenant",
-                "move-tenant",
-                "delete-tenant",
+                "add-unit",
+                "update-unit",
+                "delete-unit",
+                "move-unit",
               ]),
             })
             .parse(req.query);

@@ -6,6 +6,7 @@ const storeEnums = {
 const Enums = {
   roles: ["admin", "manager", "staff"],
   gender: ["male", "female"],
+  unitProfiles: ["tenant", "buyer"] as const,
   models: [
     "user",
     "agent",
@@ -48,6 +49,7 @@ const Enums = {
     "shop",
     "store",
   ] as const,
+  houseInvoiceProfile: ["buyer", "tenant"] as const,
   journalTypes: ["direct", "via sarif"] as const,
   supplierTypes: ["cargo", "product", "sarif", "clearance"] as const,
   drawerTypes: ["drawer", "bank"] as const,
@@ -62,7 +64,7 @@ const Enums = {
     "journal",
     "house-invoice",
   ] as const,
-  houseInvoices: ["rent", "sale"] as const,
+  houseInvoices: ["rent", "sale", "payment", "journal"] as const,
   adjustmentTypes: [
     "customer-broker-invoice",
     "broker-invoice",

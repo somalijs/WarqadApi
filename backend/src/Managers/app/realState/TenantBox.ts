@@ -1,9 +1,10 @@
 import { ClientSession } from "mongoose";
 import { ExpressRequest } from "../../../types/Express.js";
-import getTenantModel from "../../../models/Tenant.js";
+
 import addLogs from "../../../services/Logs.js";
 import TenantSchema from "./schema.js";
 import getAccountModel from "../../../models/Acounts.js";
+import getUnitModel from "../../../models/Unit.js";
 
 export const addTenant = async ({
   req,
@@ -12,7 +13,7 @@ export const addTenant = async ({
   req: ExpressRequest;
   session: ClientSession;
 }) => {
-  const { customer, floor, no, amount, startDate, deposit } =
+  const { customer, floor, no, amount, startDate, deposit, profile, currency } =
     TenantSchema.addTenantSchema.parse(req.body);
   // cehck if customer exist
   const isCustomer = await getAccountModel(req.db!)
@@ -25,31 +26,35 @@ export const addTenant = async ({
   if (!isCustomer) {
     throw new Error("Customer not found");
   }
-  const existing = await getTenantModel(req.db!)
+  const existing = await getUnitModel(req.db!)
     .findOne({
       store: isCustomer.store,
       floor,
       no,
+      profile,
       endDate: null, // only active tenants
       isDeleted: false,
     })
     .session(session);
 
   if (existing) {
-    throw new Error(`Floor ${floor} No ${no} is already rented`);
+    throw new Error(`${profile} Floor ${floor} No ${no} is already Exist`);
   }
   const tenantData = {
     customer: isCustomer._id,
     store: isCustomer.store,
     floor,
+    currency,
     no,
     deposit,
+    getUnitModel,
     amount,
+    profile,
     startDate,
     by: req.by!,
   };
 
-  const create = await getTenantModel(req.db!).create([tenantData], {
+  const create = await getUnitModel(req.db!).create([tenantData], {
     session,
   });
   const tenant = create[0];
@@ -82,13 +87,13 @@ export const updateTenant = async ({
   const { _id, floor, no, endDate, ...updateData } =
     TenantSchema.updateTenantSchema.parse(req.body);
 
-  const TenantModel = getTenantModel(req.db!);
+  const TenantModel = getUnitModel(req.db!);
   const oldTenant = await TenantModel.findById(_id).session(session);
 
   if (!oldTenant) {
     throw new Error("Tenant not found");
   }
-  const existing = await getTenantModel(req.db!)
+  const existing = await getUnitModel(req.db!)
     .findOne({
       store: oldTenant.store,
       floor,
@@ -146,7 +151,7 @@ export const moveTenant = async ({
 }) => {
   const { _id, endDate } = TenantSchema.moveTenantSchema.parse(req.body);
 
-  const TenantModel = getTenantModel(req.db!);
+  const TenantModel = getUnitModel(req.db!);
   const oldTenant = await TenantModel.findById(_id).session(session);
 
   if (!oldTenant) {
@@ -188,7 +193,7 @@ export const deleteTenant = async ({
 }) => {
   const { _id } = TenantSchema.deleteTenantSchema.parse(req.body);
 
-  const TenantModel = getTenantModel(req.db!);
+  const TenantModel = getUnitModel(req.db!);
   const oldTenant = await TenantModel.findById(_id).session(session);
 
   if (!oldTenant) {

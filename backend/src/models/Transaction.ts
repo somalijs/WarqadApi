@@ -27,6 +27,13 @@ const transactionSchema = new Schema(
         return this.type === "house-invoice";
       },
     },
+    houseProfile: {
+      type: String,
+      enum: Enums.houseInvoiceProfile,
+      function(this: any) {
+        return this.type === "house-invoice";
+      },
+    },
     amount: {
       type: Number,
       required: [true, "Transaction amount is required"],
@@ -79,11 +86,11 @@ const transactionSchema = new Schema(
       ref: "Store",
       required: [true, "Store is required"],
     },
-    tenant: {
+    unit: {
       type: Schema.Types.ObjectId,
-      ref: "Tenant",
+      ref: "Unit",
       function(this: any) {
-        return this.houseInvoice === "rent";
+        return this.type === "house-invoice";
       },
     },
     action: {

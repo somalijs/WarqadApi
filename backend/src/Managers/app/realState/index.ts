@@ -1,6 +1,6 @@
 import { ClientSession, Model } from "mongoose";
 import { ExpressRequest } from "../../../types/Express.js";
-import getTenantModel, { TenantDocument } from "../../../models/Tenant.js";
+import getUnitModel, { UnitDocument } from "../../../models/Unit.js";
 import {
   addTenant,
   updateTenant,
@@ -8,6 +8,7 @@ import {
   deleteTenant,
 } from "./TenantBox.js";
 import mongoose from "mongoose";
+import { getEndDate } from "../../../func/Date.js";
 
 type Props = {
   db: string;
@@ -16,34 +17,47 @@ type Props = {
 };
 
 class RealStateManager {
-  readonly Model: Model<TenantDocument>;
+  readonly Model: Model<UnitDocument>;
   readonly req: ExpressRequest;
   readonly session?: ClientSession;
   readonly db: string;
 
   constructor({ db, req, session }: Props) {
-    this.Model = getTenantModel(db);
+    this.Model = getUnitModel(db);
     this.req = req;
     this.session = session;
     this.db = db;
   }
 
   async get() {
-    const { id, customer, store, floor, no, search }: any = this.req.query;
+    const { id, customer, store, floor, no, search, profile, date }: any =
+      this.req.query;
+
     const matches: any = {};
     matches.isDeleted = false;
-
+    if (profile) matches.profile = profile;
     if (id) matches._id = new mongoose.Types.ObjectId(id as string);
     if (customer)
       matches.customer = new mongoose.Types.ObjectId(customer as string);
     if (store) matches.store = new mongoose.Types.ObjectId(store as string);
     if (floor) matches.floor = Number(floor);
     if (no) matches.no = no;
+    const transactionMatches: any = {};
+    if (date) {
+      const ends = getEndDate(date);
+
+      transactionMatches.dateObj = { $lte: ends };
+    }
+
     // Search logic handled after lookup to include customer fields
-    if (search && mongoose.Types.ObjectId.isValid(search)) {
-      // If search is a valid ID, we can optionally optimistically match it here if it's a local ID,
-      // but simpler to do it all in one place or just add _id here if it's the tenant ID.
-      // However, to keep it simple and fix the issue, we remove the restrictive text match here.
+    if (search) {
+      const or: any[] = [{ name: { $regex: search, $options: "i" } }];
+
+      if (mongoose.Types.ObjectId.isValid(search)) {
+        or.push({ _id: new mongoose.Types.ObjectId(search) });
+      }
+
+      matches.$or = or;
     }
     const data = await this.Model.aggregate([
       { $match: matches },
@@ -119,6 +133,73 @@ class RealStateManager {
           },
         },
       },
+      {
+        $lookup: {
+          from: "transactions",
+          localField: "_id",
+          let: { accountCurrency: "$currency" },
+          foreignField: "unit",
+          pipeline: [
+            {
+              $match: {
+                isDeleted: false,
+                ...transactionMatches,
+              },
+            },
+            {
+              $addFields: {
+                originalAmount: "$amount",
+                originalCurrency: "$currency",
+                amount: {
+                  $cond: [
+                    { $ne: ["$$accountCurrency", "$currency"] },
+                    "$exchangedAmount",
+                    "$amount",
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                debits: {
+                  $cond: [{ $eq: ["$action", "debit"] }, "$amount", 0],
+                },
+                credits: {
+                  $cond: [{ $eq: ["$action", "credit"] }, "$amount", 0],
+                },
+                label: "$details.description",
+                calculatedAmount: {
+                  $cond: [
+                    { $eq: ["$action", "debit"] },
+                    { $multiply: ["$amount", -1] },
+                    "$amount",
+                  ],
+                },
+              },
+            },
+            {
+              $sort: {
+                dateObj: 1,
+                createdAt: 1,
+              },
+            },
+          ],
+          as: "transactions",
+        },
+      },
+      {
+        $addFields: {
+          balance: {
+            $sum: "$transactions.calculatedAmount",
+          },
+          debits: {
+            $sum: "$transactions.debits",
+          },
+          credits: {
+            $sum: "$transactions.credits",
+          },
+        },
+      },
     ]);
 
     return id ? data[0] : data;
@@ -127,16 +208,16 @@ class RealStateManager {
   async create({ type }: { type: string }) {
     let result;
     switch (type) {
-      case "add-tenant":
+      case "add-unit":
         result = await addTenant({ req: this.req, session: this.session! });
         break;
-      case "update-tenant":
+      case "update-unit":
         result = await updateTenant({ req: this.req, session: this.session! });
         break;
-      case "move-tenant":
+      case "move-unit":
         result = await moveTenant({ req: this.req, session: this.session! });
         break;
-      case "delete-tenant":
+      case "delete-unit":
         result = await deleteTenant({ req: this.req, session: this.session! });
         break;
       default:

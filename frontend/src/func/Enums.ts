@@ -9,5 +9,6 @@ const Enums = {
   models: ["user", "agent"],
   storeEnums: storeEnums,
   storeTypes: Object.keys(storeEnums) as Array<keyof typeof storeEnums>,
+  currencies: ["USD", "KSH", "CNY", "TZS"] as const,
 };
 export default Enums;

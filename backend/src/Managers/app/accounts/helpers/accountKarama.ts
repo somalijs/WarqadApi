@@ -136,6 +136,15 @@ export async function getKaramaAccounts({
                         $ifNull: ["$details.description", "Unknown Journal"],
                       },
                     },
+                    {
+                      case: { $in: ["$type", ["sale", "purchase"]] },
+                      then: {
+                        $ifNull: [
+                          "$details.description",
+                          "Unknown Transaction",
+                        ],
+                      },
+                    },
                   ],
                   default: "$amount",
                 },

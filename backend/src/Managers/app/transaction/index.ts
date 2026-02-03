@@ -15,6 +15,15 @@ import journalBox from "./journals/journal.js";
 import invoiceList from "./invoices/invoiceList.js";
 import houseInvoice from "./invoices/houseInvoice.js";
 import houseInvoiceAgg from "./helpers/houseInvoiceAgg.js";
+import stockSupply from "./purchase/stockSupply.js";
+import purhcaseAgg, {
+  clearanceAgg,
+  finalCostAgg,
+  stocksAgg,
+} from "./helpers/purhcaseAgg.js";
+import clearanceStockSupply from "./purchase/clearanceStockSupply.js";
+import saleStock from "./sale/saleStock.js";
+import saleAgg from "./helpers/saleAgg.js";
 
 type Props = {
   db: string;
@@ -47,10 +56,23 @@ class TransactionManager {
       houseInvoice,
       detailsMonth,
       detailsYear,
+      agg,
+      purchase,
+      availableClearance,
+      search,
     }: any = this.req.query;
     const matches: any = {};
     if (free !== "true") {
       matches.isDeleted = false;
+    }
+    if (search) {
+      const or: any[] = [{ ref: { $regex: search, $options: "i" } }];
+
+      if (mongoose.Types.ObjectId.isValid(search)) {
+        or.push({ _id: new mongoose.Types.ObjectId(search) });
+      }
+
+      matches.$or = or;
     }
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (invoiceList) matches.invoiceList = invoiceList;
@@ -61,12 +83,64 @@ class TransactionManager {
     if (adjustmentType) matches.adjustmentType = adjustmentType;
     if (profile) matches.profile = profile;
     if (houseInvoice) matches.houseInvoice = houseInvoice;
+    if (purchase) matches.purchase = purchase;
+    let availableClearanceAgg: any[] = [];
+    if (availableClearance === "true") {
+      availableClearanceAgg.push(
+        {
+          $lookup: {
+            from: "transactions",
+            localField: "_id",
+            foreignField: "transaction",
+            pipeline: [
+              {
+                $match: {
+                  isDeleted: false,
+                },
+              },
+            ],
+            as: "clearanced",
+          },
+        },
+        {
+          $match: {
+            clearanced: { $size: 0 }, // only keep docs with no matching transaction
+          },
+        },
+        {
+          $addFields: {
+            name: {
+              $concat: [
+                { $ifNull: ["$ref", ""] },
+                " - ",
+                { $toString: { $trunc: ["$amount", 2] } },
+                " ",
+                { $ifNull: ["$currency", ""] },
+              ],
+            },
+          },
+        },
+      );
+    }
     if (detailsMonth && detailsYear) {
       matches["details.month"] = Number(detailsMonth);
       matches["details.year"] = Number(detailsYear);
     }
     let customAgg: any[] = [];
     if (houseInvoice) customAgg = houseInvoiceAgg();
+    if (agg === "storeless") customAgg = purhcaseAgg();
+    if (agg === "stock-supply-clearance") {
+      customAgg = clearanceAgg();
+    }
+    if (agg === "final-cost") {
+      customAgg = finalCostAgg();
+    }
+    if (agg === "stocks") {
+      customAgg = stocksAgg();
+    }
+    if (agg === "sale") {
+      customAgg = saleAgg();
+    }
     const data = await this.Model.aggregate([
       {
         $match: matches,
@@ -99,7 +173,22 @@ class TransactionManager {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: "stores",
+          localField: "store",
+          foreignField: "_id",
+          as: "storeObj",
+        },
+      },
+      {
+        $unwind: {
+          path: "$storeObj",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       ...customAgg,
+      ...availableClearanceAgg,
       {
         $sort: {
           dateObj: 1,
@@ -299,7 +388,27 @@ class TransactionManager {
           session: this.session!,
         });
         break;
-
+      case "stock-supply":
+        result = await stockSupply({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      case "stock-supply-clearance":
+        result = await clearanceStockSupply({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      case "stock-sale":
+        result = await saleStock({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
       default:
         throw new Error("Invalid transaction type");
     }

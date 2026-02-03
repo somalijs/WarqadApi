@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
-import mongoose from 'mongoose';
-import { AppDocument } from '../models/app.js';
+import mongoose from "mongoose";
+import { AppDocument } from "../models/app.js";
 
 type profile = {
   id?: mongoose.Types.ObjectId;
@@ -34,6 +34,8 @@ type profile = {
   appData?: AppDocument;
   stores?: any[];
   storeIds?: string[];
+
+  defaultCurrency?: string;
 };
 export type ExpressRequest = Request & profile;
 export type ExpressResponse = Response;

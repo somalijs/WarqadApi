@@ -8,6 +8,7 @@ import DrawerManager from "../../Managers/app/drawers/index.js";
 import TransactionManager from "../../Managers/app/transaction/index.js";
 import { AccountsPDF } from "../../pdfs/AccountsPdf.js";
 import RealStateManager from "../../Managers/app/realState/index.js";
+import StockManager from "../../Managers/app/transaction/stocks/Stocks.js";
 
 const schema = z.object({
   type: z.enum([
@@ -20,6 +21,8 @@ const schema = z.object({
     "get-statement",
     "get-accounts-balance",
     "real-state",
+    "stock-level",
+    "profit-loss",
   ]),
 });
 
@@ -92,6 +95,14 @@ const appPrivateController = expressAsyncHandler(
           const Account = new AccountsManager({ db: req.db!, req });
           resData = await Account.get();
         }
+        break;
+      case "stock-level":
+        const Stock = new StockManager({ req });
+        resData = await Stock.stockLevels();
+        break;
+      case "profit-loss":
+        const Profit = new StockManager({ req });
+        resData = await Profit.profitAndLoss();
         break;
       default:
         throw new Error("Invalid type");

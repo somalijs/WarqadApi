@@ -13,6 +13,27 @@ const transactionSchema = new Schema(
       enum: Enums.transactionTypes,
       required: [true, "Transaction type is required"],
     },
+    transaction: {
+      type: Schema.Types.ObjectId,
+      ref: "Transaction",
+      function(this: any) {
+        return this.purchase === "stock-supply-clearance";
+      },
+    },
+    sale: {
+      type: String,
+      enum: Enums.saleTypes,
+      function(this: any) {
+        return this.type === "sale";
+      },
+    },
+    purchase: {
+      type: String,
+      enum: Enums.purchaseTypes,
+      function(this: any) {
+        return this.type === "purchase";
+      },
+    },
     invoiceList: {
       type: String,
       enum: Enums.invoiceListTypes,

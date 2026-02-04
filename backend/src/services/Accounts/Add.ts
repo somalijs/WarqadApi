@@ -1,37 +1,37 @@
-import z from 'zod';
-import zodFields from '../../zod/Fields.js';
-import Enums from '../../func/Enums.js';
-import getAccountModel from '../../models/Acounts.js';
-import { ExpressRequest } from '../../types/Express.js';
-import { ClientSession } from 'mongoose';
-import getStoreModel from '../../models/Store.js';
-import addLogs from '../Logs.js';
-import { ProfileType } from './config.js';
-import getUserModel from '../../models/profiles/User.js';
+import z from "zod";
+import zodFields from "../../zod/Fields.js";
+import Enums from "../../func/Enums.js";
+import getAccountModel from "../../models/Acounts.js";
+import { ExpressRequest } from "../../types/Express.js";
+import { ClientSession } from "mongoose";
+import getStoreModel from "../../models/Store.js";
+import addLogs from "../Logs.js";
+import { ProfileType } from "./config.js";
+import getUserModel from "../../models/profiles/User.js";
 
 export const baseSchema = z.object({
   name: z
     .string()
-    .min(2, 'Name is required')
-    .max(20, 'Name must be less than 20 characters')
-    .transform((val) => val.trim().toLowerCase().replace(/\s+/g, ' ')),
-  phoneNumber: zodFields.phoneNumber.or(z.literal('')).optional(),
-  email: zodFields.email.or(z.literal('')).optional(),
+    .min(2, "Name is required")
+
+    .transform((val) => val.trim().toLowerCase().replace(/\s+/g, " ")),
+  phoneNumber: zodFields.phoneNumber.or(z.literal("")).optional(),
+  email: zodFields.email.or(z.literal("")).optional(),
   address: z
     .string()
-    .min(3, 'Address is required')
-    .max(100, 'Address must be less than 100 characters')
-    .or(z.literal(''))
+    .min(3, "Address is required")
+    .max(100, "Address must be less than 100 characters")
+    .or(z.literal(""))
     .optional(),
-  store: zodFields.objectId('Store Id '),
+  store: zodFields.objectId("Store Id "),
   //
-  guarantor: z.string().or(z.literal('')).optional(),
+  guarantor: z.string().or(z.literal("")).optional(),
   creditLimit: z.number().default(0),
   salary: z.number().default(0),
 });
 export const drawerSchema = z.object({
-  keys: z.array(zodFields.objectId('Key Id ')).default([]),
-  type: z.string().optional().or(z.literal('')),
+  keys: z.array(zodFields.objectId("Key Id ")).default([]),
+  type: z.string().optional().or(z.literal("")),
 });
 export const profileSchema = z.object({
   profile: z.enum(Enums.accountProfiles),
@@ -47,7 +47,7 @@ const addAccount = async ({
 }) => {
   const { profile } = profileSchema.parse(req.params);
   const { name, phoneNumber, email, address, store } = baseSchema.parse(
-    req.body
+    req.body,
   );
   // check if store exists
   const isStore = await getStoreModel(req.db!)
@@ -57,7 +57,7 @@ const addAccount = async ({
     })
     .session(session);
   if (!isStore) {
-    throw new Error('Store not found');
+    throw new Error("Store not found");
   }
   const createData: any = {
     name,
@@ -67,16 +67,16 @@ const addAccount = async ({
     store: isStore._id.toString(),
     profile: profile as Profile,
   };
-  if (profile === 'customer') {
+  if (profile === "customer") {
     const { guarantor, creditLimit } = baseSchema.parse(req.body);
     createData.guarantor = guarantor;
     createData.creditLimit = creditLimit;
-  } else if (profile === 'employee') {
+  } else if (profile === "employee") {
     const { salary, guarantor } = baseSchema.parse(req.body);
     createData.salary = salary;
     createData.guarantor = guarantor;
     // @ts-ignore
-  } else if (profile === 'drawer') {
+  } else if (profile === "drawer") {
     delete createData.phoneNumber;
     delete createData.email;
     delete createData.address;
@@ -93,9 +93,9 @@ const addAccount = async ({
         if (!isUser) {
           throw new Error(`User ${key} not found`);
         }
-        if (isUser.role !== 'staff') {
+        if (isUser.role !== "staff") {
           throw new Error(
-            `User ${isUser.name} ${isUser.surname} is not a staff`
+            `User ${isUser.name} ${isUser.surname} is not a staff`,
           );
         }
         keyIds.push(isUser._id);
@@ -113,10 +113,10 @@ const addAccount = async ({
     ],
     {
       session,
-    }
+    },
   );
   if (!account.length) {
-    throw new Error('Failed to create account');
+    throw new Error("Failed to create account");
   }
   // add logs
   await addLogs({
@@ -125,7 +125,7 @@ const addAccount = async ({
     old: {},
     by: req.by!,
     dbName: req.db!,
-    action: 'create',
+    action: "create",
     session,
   });
 };

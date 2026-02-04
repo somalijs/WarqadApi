@@ -67,6 +67,7 @@ const TransactionSchema = {
       "stock-supply",
       "stock-supply-clearance",
       "stock-sale",
+      "stock-adjustment",
     ]),
   }),
   shop: z.object({

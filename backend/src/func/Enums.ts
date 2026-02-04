@@ -66,6 +66,7 @@ const Enums = {
     "house-invoice",
     "purchase",
     "sale",
+    "stock-adjustment",
   ] as const,
   saleTypes: ["stock-sale"] as const,
   saleProfiles: ["customer", "shop"] as const,

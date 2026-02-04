@@ -56,15 +56,37 @@ class StockManager {
             {
               $addFields: {
                 calculatedQuantity: {
-                  $cond: [
-                    {
-                      $eq: ["$transactions.type", "purchase"],
-                    },
-                    "$quantity",
-                    {
-                      $multiply: ["$quantity", -1],
-                    },
-                  ],
+                  $switch: {
+                    branches: [
+                      {
+                        case: { $eq: ["$transactions.type", "purchase"] },
+                        then: "$quantity",
+                      },
+                      {
+                        case: { $eq: ["$transactions.type", "sale"] },
+                        then: {
+                          $multiply: ["$quantity", -1],
+                        },
+                      },
+                      {
+                        case: {
+                          $eq: ["$transactions.type", "stock-adjustment"],
+                        },
+                        then: {
+                          $cond: [
+                            {
+                              $eq: ["$transactions.action", "credit"],
+                            },
+                            "$quantity",
+                            {
+                              $multiply: ["$quantity", -1],
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                    default: 0,
+                  },
                 },
                 label: "$transactions.type",
                 ref: "$transactions.ref",

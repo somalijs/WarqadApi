@@ -61,7 +61,7 @@ const stockSupply = async ({
     note,
     store: storeDoc._id,
     amount: totalAmount,
-    currency: storeDoc.currency,
+    currency: supplierDoc.currency,
     supplier: {
       name: supplierDoc.name,
       _id: supplierDoc._id,
@@ -74,15 +74,16 @@ const stockSupply = async ({
   };
   if (supplierDoc.currency !== storeDoc.currency) {
     const { exchangeRate } = TransactionSchema.exchangeRate.parse(req.body);
+
     const exAmount = exchangedAmount({
       amount: totalAmount,
-      accountCurrency: supplierDoc.currency!,
+      accountCurrency: storeDoc.currency!,
       exchangeRate: exchangeRate,
-      transactionCurrency: storeDoc.currency!,
-      round: false,
+      transactionCurrency: supplierDoc.currency!,
+      round: true,
     });
     transactionData.exchangedAmount = exAmount;
-    transactionData.exchangedCurrency = supplierDoc.currency;
+    transactionData.exchangedCurrency = storeDoc.currency;
     transactionData.exchangeRate = exchangeRate;
   }
   const createdTransactions = await getTransactionModel(req.db!).create(
@@ -111,9 +112,18 @@ const stockSupply = async ({
       if (!productDoc) {
         throw new Error(`Product not found at index ${index}`);
       }
-
-      if (productDoc.cost !== cost) {
-        productDoc.cost = cost;
+      let newCost = cost;
+      if (supplierDoc.currency !== storeDoc.currency) {
+        const { exchangeRate } = TransactionSchema.exchangeRate.parse(req.body);
+        newCost = exchangedAmount({
+          amount: cost,
+          accountCurrency: storeDoc.currency!,
+          exchangeRate: exchangeRate,
+          transactionCurrency: supplierDoc.currency!,
+        });
+      }
+      if (productDoc.cost !== newCost) {
+        productDoc.cost = newCost;
         await productDoc.save({ session });
       }
 

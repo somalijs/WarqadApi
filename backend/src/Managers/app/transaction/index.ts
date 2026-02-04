@@ -24,6 +24,10 @@ import purhcaseAgg, {
 import clearanceStockSupply from "./purchase/clearanceStockSupply.js";
 import saleStock from "./sale/saleStock.js";
 import saleAgg from "./helpers/saleAgg.js";
+import StockAdjustment from "./stockAdjustment/StockAdjustment.js";
+import getStoreModel from "../../../models/Store.js";
+import getStocksModel from "../../../models/Stocks.js";
+import getProductModel from "../../../models/inventory/Product.js";
 
 type Props = {
   db: string;
@@ -326,14 +330,53 @@ class TransactionManager {
     const { id } = this.req.params;
     // check if is exist
     const isExist = await this.Model.findOne({ _id: id }).session(
-      this.session || null,
+      this.session!,
     );
+    if (!this.session) {
+      throw new Error("Session has not been initialized");
+    }
     if (!isExist) throw new Error(`Reference  is not exist`);
     if (isExist.isDeleted)
       throw new Error(`Transaction (${isExist.ref}) is already reversed`);
     // mark old as deleted
     isExist.isDeleted = true;
-    await isExist.save({ session: this.session || null });
+    if (isExist.purchase === "stock-supply-clearance") {
+      const storeDoc = await getStoreModel(this.req.db!)
+        .findOne({ _id: isExist.store })
+        .session(this.session!);
+      if (!storeDoc) throw new Error(`Clearance store is missing`);
+      const purchaseDoc = await getTransactionModel(this.req.db!)
+        .findOne({ _id: isExist.transaction })
+        .session(this.session!);
+      if (!purchaseDoc) throw new Error(`Purchase is missing`);
+      const clearanceAmount =
+        isExist.currency === storeDoc.currency
+          ? isExist.amount
+          : isExist.exchangedAmount;
+      if (!clearanceAmount) throw new Error(`Clearance amount is missing`);
+      const productDocs = await getStocksModel(this.req.db!)
+        .find({ transaction: purchaseDoc._id })
+        .sort({ _id: 1 }) // optional: ensures order if needed
+        .session(this.session!)
+        .lean();
+
+      const totalQuantity = productDocs.reduce(
+        (acc, item) => acc + item.quantity,
+        0,
+      );
+      if (totalQuantity > 0) {
+        const amount = clearanceAmount / totalQuantity;
+        // Update the products with the clearance amount
+        for (const product of productDocs) {
+          await getProductModel(this.req.db!).updateOne(
+            { _id: product.product },
+            { $inc: { cost: -amount } },
+            { session: this.session! },
+          );
+        }
+      }
+    }
+    await isExist.save({ session: this.session! });
 
     // add logs
     await addLogs({
@@ -343,7 +386,7 @@ class TransactionManager {
       by: this.req.by!,
       dbName: this.req.db!,
       action: "delete",
-      session: this.session || null,
+      session: this.session,
     });
     return { message: `Transaction (${isExist.ref}) reversed successfully` };
   }
@@ -404,6 +447,13 @@ class TransactionManager {
         break;
       case "stock-sale":
         result = await saleStock({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      case "stock-adjustment":
+        result = await StockAdjustment({
           req: this.req,
           ref: refNo,
           session: this.session!,

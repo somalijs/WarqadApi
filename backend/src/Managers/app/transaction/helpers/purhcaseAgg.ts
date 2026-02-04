@@ -225,6 +225,9 @@ export const clearanceAgg = () => {
               clearance: {
                 $divide: ["$clearanceAmount", "$totalStockQty"],
               },
+              originalClearance: {
+                $divide: ["$amount", "$totalStockQty"],
+              },
               quantity: "$$stock.quantity",
               // unitQty: "$$stock.unitQty",
               // perClearance: {

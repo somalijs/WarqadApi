@@ -101,13 +101,12 @@ const clearanceStockSupply = async ({
     const { exchangeRate } = TransactionSchema.exchangeRate.parse(req.body);
     const exAmount = exchangedAmount({
       amount: amount,
-      accountCurrency: supplierDoc.currency!,
+      accountCurrency: storeDoc.currency!,
       exchangeRate: exchangeRate,
-      transactionCurrency: storeDoc.currency!,
-      round: false,
+      transactionCurrency: supplierDoc.currency!,
     });
     transactionData.exchangedAmount = exAmount;
-    transactionData.exchangedCurrency = supplierDoc.currency;
+    transactionData.exchangedCurrency = storeDoc.currency;
     transactionData.exchangeRate = exchangeRate;
     defaultAmount = exAmount;
   }

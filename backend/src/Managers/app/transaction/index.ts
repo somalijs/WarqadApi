@@ -28,6 +28,7 @@ import StockAdjustment from "./stockAdjustment/StockAdjustment.js";
 import getStoreModel from "../../../models/Store.js";
 import getStocksModel from "../../../models/Stocks.js";
 import getProductModel from "../../../models/inventory/Product.js";
+import Payment from "./payment/Payment.js";
 
 type Props = {
   db: string;
@@ -454,6 +455,13 @@ class TransactionManager {
         break;
       case "stock-adjustment":
         result = await StockAdjustment({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      case "payments":
+        result = await Payment({
           req: this.req,
           ref: refNo,
           session: this.session!,

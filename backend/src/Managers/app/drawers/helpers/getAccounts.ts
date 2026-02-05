@@ -168,6 +168,12 @@ export async function getDrawers({
               currency: "$$drawerCurrency",
             },
           },
+          {
+            $sort: {
+              dateObj: 1,
+              createdAt: 1,
+            },
+          },
         ],
         as: "transactions",
       },

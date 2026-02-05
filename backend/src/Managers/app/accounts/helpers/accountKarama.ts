@@ -137,7 +137,7 @@ export async function getKaramaAccounts({
                       },
                     },
                     {
-                      case: { $in: ["$type", ["sale", "purchase"]] },
+                      case: { $in: ["$type", ["sale", "purchase", "payment"]] },
                       then: {
                         $ifNull: [
                           "$details.description",

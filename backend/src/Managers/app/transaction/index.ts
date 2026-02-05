@@ -29,6 +29,7 @@ import getStoreModel from "../../../models/Store.js";
 import getStocksModel from "../../../models/Stocks.js";
 import getProductModel from "../../../models/inventory/Product.js";
 import Payment from "./payment/Payment.js";
+import { getDateRange } from "../../../func/Date.js";
 
 type Props = {
   db: string;
@@ -65,6 +66,9 @@ class TransactionManager {
       purchase,
       availableClearance,
       search,
+      from,
+      to,
+      currency,
     }: any = this.req.query;
     const matches: any = {};
     if (free !== "true") {
@@ -84,6 +88,7 @@ class TransactionManager {
     if (type) matches.type = type;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
     if (ref) matches.ref = ref;
+    if (currency) matches.currency = currency;
     if (date) matches.date = date;
     if (adjustmentType) matches.adjustmentType = adjustmentType;
     if (profile) matches.profile = profile;
@@ -145,6 +150,13 @@ class TransactionManager {
     }
     if (agg === "sale") {
       customAgg = saleAgg();
+    }
+    if (from && to) {
+      const { starts, ends } = getDateRange({ from, to });
+      matches.dateObj = {
+        $gte: starts,
+        $lte: ends,
+      };
     }
     const data = await this.Model.aggregate([
       {

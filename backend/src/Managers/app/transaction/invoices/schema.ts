@@ -42,14 +42,9 @@ const houseInvoiceJournalDetails = z.object({
   description: z.string(),
 });
 const houseInvoiceSaleDetails = z.object({
-  details: z.object({
-    floor: z.number().int().min(0),
-    houseNo: z.number().int().min(0),
-    description: z.string().optional(),
-  }),
+  unit: zodFields.objectId("Unit id"),
   broker: zodFields.objectId("Broker id").optional(),
   commission: z.number().min(0).optional(),
-  customer: zodFields.objectId("Customer id").optional(),
 });
 const InvoiceSchema = {
   houseInvoiceSchema,

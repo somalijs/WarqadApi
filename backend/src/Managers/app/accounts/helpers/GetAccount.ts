@@ -146,7 +146,9 @@ export async function getAccounts({
                       },
                     },
                   ],
-                  default: "$amount",
+                  default: {
+                    $ifNull: ["$details.description", "$amount"],
+                  },
                 },
               },
             },

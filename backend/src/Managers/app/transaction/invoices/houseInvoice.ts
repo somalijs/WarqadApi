@@ -146,6 +146,42 @@ const houseInvoice = async ({
     transactionData.unit = isUnit._id;
     transactionData.houseProfile = profile;
     transactionData.details.description = description;
+  } else if (type === "sale") {
+    const { unit, broker, commission } =
+      InvoiceSchema.houseInvoiceSaleDetails.parse(req.body);
+    const isTenant = await getUnitModel(req.db!).findOne({
+      _id: unit,
+      profile: "buyer",
+      isDeleted: false,
+    });
+    if (!isTenant) {
+      throw new Error("Buyer not found");
+    }
+    transactionData.details = {};
+    transactionData.currency = isTenant.currency;
+    customerId = isTenant.customer;
+    transactionData.unit = isTenant._id;
+    transactionData.amount = isTenant.amount;
+    transactionData.details.description = `Sale floor ${isTenant.floor} house no ${isTenant.no}`;
+    transactionData.details.floor = isTenant.floor;
+    transactionData.details.houseNo = isTenant.no;
+    transactionData.action = "credit";
+    transactionData.houseProfile = "buyer";
+    if (broker) {
+      const isBroker = await getAccountModel(req.db!).findOne({
+        _id: broker,
+        profile: "broker",
+        isDeleted: false,
+      });
+      if (!isBroker) {
+        throw new Error("Broker not found");
+      }
+      transactionData.broker = {
+        name: isBroker.name,
+        _id: isBroker._id,
+      };
+      transactionData.commission = commission;
+    }
   } else {
     throw new Error("Invalid house invoice type");
   }

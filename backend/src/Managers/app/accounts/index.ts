@@ -58,11 +58,6 @@ class AccountsManager {
     if (store) {
       const storeId = new mongoose.Types.ObjectId(store);
       matches.store = storeId;
-      if (
-        this.req.role !== "admin" &&
-        !this.req?.storeIds?.map((store) => String(store)).includes(store)
-      )
-        throw new Error("You are not authorized For this Store");
     }
     const transactionMatches: any = {};
 
@@ -77,7 +72,7 @@ class AccountsManager {
     if (this.req?.role !== "admin" && !store) {
       matches.store = {
         $in: (this.req?.storeIds || []).map(
-          (item) => new mongoose.Types.ObjectId(item)
+          (item) => new mongoose.Types.ObjectId(item),
         ),
       };
     }
@@ -121,10 +116,10 @@ class AccountsManager {
       base.profile as keyof typeof AccountSchema
     ].parse(this.req.body);
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== "admin") {
-      if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error("You are not authorized For this Store");
-    }
+    // if (this.req?.role !== "admin") {
+    //   if ((this.req?.storeIds || []).includes(String(base.store)))
+    //     throw new Error("You are not authorized For this Store");
+    // }
     const createData = {
       ...base,
       ...others,
@@ -136,7 +131,7 @@ class AccountsManager {
     if (!store) throw new Error(`Store of id (${createData.store}) not found`);
     const created = await this.Model.create(
       [{ ...createData, by: this.req.by! }],
-      { session: this?.session || null }
+      { session: this?.session || null },
     );
 
     // add logs
@@ -159,17 +154,17 @@ class AccountsManager {
     // validate base
     const base = AccountSchema.base.parse(rawBody);
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== "admin") {
-      if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error("You are not authorized For this Store");
-    }
+    // if (this.req?.role !== "admin") {
+    //   if ((this.req?.storeIds || []).includes(String(base.store)))
+    //     throw new Error("You are not authorized For this Store");
+    // }
     // validate type-specific schema
     const others =
       AccountSchema[base.profile as keyof typeof AccountSchema].parse(rawBody);
 
     // check if account exists
     const isExist = await this.Model.findById(id).session(
-      this?.session || null
+      this?.session || null,
     );
     if (!isExist) throw new Error(`${base.profile} of id (${id}) not found`);
 
@@ -239,7 +234,7 @@ class AccountsManager {
     const updated = await this.Model.findOneAndReplace(
       { _id: isExist._id },
       { ...newData, by: this.req.by! },
-      { session: this.session, new: true, runValidators: true }
+      { session: this.session, new: true, runValidators: true },
     );
 
     if (!updated)
@@ -299,7 +294,7 @@ class AccountsManager {
     const deleted = await this.Model.findOneAndUpdate(
       { _id: id },
       { isDeleted: true },
-      { session: this?.session || null }
+      { session: this?.session || null },
     );
     if (!deleted) throw new Error(`Error deleting account of id (${id})`);
 

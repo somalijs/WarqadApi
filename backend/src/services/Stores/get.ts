@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
-import { ExpressRequest } from '../../types/Express.js';
-import getStoreModel from '../../models/Store.js';
+import mongoose from "mongoose";
+import { ExpressRequest } from "../../types/Express.js";
+import getStoreModel from "../../models/Store.js";
 
 // Returns list or single store when query.id is provided
 const getStores = async ({
@@ -12,12 +12,13 @@ const getStores = async ({
   dbName: string;
   matches?: Record<string, unknown>;
 }) => {
-  const { id, type, select, query } = req.query as {
+  const { id, type, select, query, search } = req.query as {
     id?: string;
     type?: string;
     app?: string;
     select?: string;
     query?: string;
+    search?: string;
   };
 
   const match: Record<string, unknown> = {
@@ -27,24 +28,38 @@ const getStores = async ({
   if (type) match.type = type;
 
   if (query) {
-    match.name = { $regex: query.toLowerCase(), $options: 'i' };
+    match.name = { $regex: query.toLowerCase(), $options: "i" };
   }
+  if (search) {
+    const or: any[] = [{ name: { $regex: search, $options: "i" } }];
 
+    if (mongoose.Types.ObjectId.isValid(search)) {
+      or.push({ _id: new mongoose.Types.ObjectId(search) });
+    }
+
+    match.$or = or;
+  }
+  if (id && req.role !== "admin") {
+    const storeIds = req.storeIds || [];
+    if (!storeIds.includes(id)) {
+      throw new Error("You are not authorized to access this store");
+    }
+  }
   const Model = getStoreModel(dbName);
   const find = await Model.aggregate([
     { $match: match },
     {
       $lookup: {
-        from: 'apps',
-        localField: 'app',
-        foreignField: '_id',
-        as: 'apps',
+        from: "apps",
+        localField: "app",
+        foreignField: "_id",
+        as: "apps",
       },
     },
-    { $unwind: { path: '$apps', preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$apps", preserveNullAndEmptyArrays: true } },
     {
       $addFields: {
-        appName: '$apps.name',
+        appName: "$apps.name",
       },
     },
     { $project: { apps: 0 } },
@@ -52,9 +67,9 @@ const getStores = async ({
       $addFields: {
         status: {
           $cond: {
-            if: { $eq: ['$isActive', true] },
-            then: 'active',
-            else: 'inactive',
+            if: { $eq: ["$isActive", true] },
+            then: "active",
+            else: "inactive",
           },
         },
       },
@@ -71,7 +86,7 @@ const getStores = async ({
     }));
   }
   if (id && !resData.length) {
-    throw new Error('Store not found');
+    throw new Error("Store not found");
   }
 
   return id ? resData[0] : resData;

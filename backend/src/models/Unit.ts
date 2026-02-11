@@ -21,7 +21,7 @@ const unitSchema = new Schema(
       required: [true, "Store is required"],
     },
     floor: {
-      type: Number,
+      type: String,
       required: [true, "Floor is required"],
     },
     no: {

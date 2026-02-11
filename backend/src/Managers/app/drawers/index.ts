@@ -187,7 +187,9 @@ class DrawerManager {
                         },
                       },
                     ],
-                    default: "Transaction Unknown",
+                    default: {
+                      $ifNull: ["$details.description", "Transaction Unknown"],
+                    },
                   },
                 },
                 line: {
@@ -273,10 +275,10 @@ class DrawerManager {
     const base = AccountSchema.base.parse(this.req.body);
 
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== "admin") {
-      if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error("You are not authorized For this Store");
-    }
+    // if (this.req?.role !== "admin") {
+    //   if ((this.req?.storeIds || []).includes(String(base.store)))
+    //     throw new Error("You are not authorized For this Store");
+    // }
     const createData = {
       ...base,
     };
@@ -310,10 +312,10 @@ class DrawerManager {
     // validate base
     const base = AccountSchema.base.parse(rawBody);
     // reject if its not admin and store is no includes req.storeids
-    if (this.req?.role !== "admin") {
-      if ((this.req?.storeIds || []).includes(String(base.store)))
-        throw new Error("You are not authorized For this Store");
-    }
+    // if (this.req?.role !== "admin") {
+    //   if ((this.req?.storeIds || []).includes(String(base.store)))
+    //     throw new Error("You are not authorized For this Store");
+    // }
 
     // check if account exists
     const isExist = await this.Model.findById(id).session(

@@ -5,7 +5,7 @@ import Enums from "../../../func/Enums.js";
 const addTenantSchema = z.object({
   profile: z.enum(Enums.unitProfiles),
   customer: zodFields.objectId("Customer id"),
-  floor: z.number().int().min(0, "Floor must be a positive number"),
+  floor: z.string().min(1, "Floor is required"),
   no: z.string().min(1, "No is required"),
   amount: z.number().min(0, "Amount must be a positive number"),
   startDate: zodFields.date,
@@ -15,7 +15,7 @@ const addTenantSchema = z.object({
 
 const updateTenantSchema = z.object({
   _id: zodFields.objectId("Tenant id"),
-  floor: z.number().int().min(0, "Floor must be a positive number").optional(),
+  floor: z.string().min(1, "Floor is required").optional(),
   no: z.string().min(1, "No is required").optional(),
   amount: z.number().min(0, "Amount must be a positive number").optional(),
   currency: z.enum(Enums.currencies).optional(),

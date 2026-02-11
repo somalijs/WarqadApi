@@ -21,7 +21,7 @@ class StoreManger {
       search?: string;
       select?: string;
     };
-    if (req.role !== "admin") matches._id = { $in: [req.stores] };
+    // if (req.role !== "admin") matches._id = { $in: [req.stores] };
     if (type) matches.type = type;
     if (subType) matches.subType = subType;
     if (id) matches._id = new mongoose.Types.ObjectId(id);
@@ -41,6 +41,7 @@ class StoreManger {
       }
     }
     const stores = await this.Model.aggregate([{ $match: matches }]);
+
     let result = stores;
     if (select === "true") {
       result = stores.map((store) => ({
@@ -51,6 +52,7 @@ class StoreManger {
       }));
     }
     if (id && !result.length) throw new Error("Store not found");
+
     return id ? result[0] : result;
   }
 }

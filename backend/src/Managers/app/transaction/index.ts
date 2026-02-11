@@ -340,6 +340,9 @@ class TransactionManager {
     };
   }
   async reverseTransaction() {
+    if (this.req.role !== "admin") {
+      throw new Error("You are not authorized to reverse transactions");
+    }
     const { id } = this.req.params;
     // check if is exist
     const isExist = await this.Model.findOne({ _id: id }).session(
@@ -407,6 +410,9 @@ class TransactionManager {
   async create({ type, ref }: { ref?: string; type: string }) {
     let refNo: string;
     if (ref) {
+      if (this.req.role !== "admin") {
+        throw new Error("You are not authorized to update transactions");
+      }
       // check if is exist
       const isExist = await this.Model.findOne({ ref }).session(
         this.session || null,

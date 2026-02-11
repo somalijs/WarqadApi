@@ -148,7 +148,9 @@ export async function getDrawers({
                       },
                     },
                   ],
-                  default: "Transaction Unknown",
+                  default: {
+                    $ifNull: ["$details.description", "Transaction Unknown"],
+                  },
                 },
               },
               line: {

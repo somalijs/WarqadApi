@@ -21,7 +21,7 @@ class StoreManger {
       search?: string;
       select?: string;
     };
-    // if (req.role !== "admin") matches._id = { $in: [req.stores] };
+    console.log(search);
     if (type) matches.type = type;
     if (subType) matches.subType = subType;
     if (id) matches._id = new mongoose.Types.ObjectId(id);
@@ -34,12 +34,7 @@ class StoreManger {
 
       matches.$or = or;
     }
-    if (id && req.role !== "admin") {
-      const storeIds = req.storeIds || [];
-      if (!storeIds.includes(id)) {
-        throw new Error("You are not authorized to access this store");
-      }
-    }
+
     const stores = await this.Model.aggregate([{ $match: matches }]);
 
     let result = stores;
@@ -51,8 +46,8 @@ class StoreManger {
         subType: store.subType,
       }));
     }
+    console.log(result);
     if (id && !result.length) throw new Error("Store not found");
-
     return id ? result[0] : result;
   }
 }

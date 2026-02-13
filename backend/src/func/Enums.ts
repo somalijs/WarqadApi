@@ -5,8 +5,9 @@ const storeEnums = {
 };
 const Enums = {
   roles: ["admin", "manager", "staff"],
+  productTypes: ["item", "pressure", "bag"] as const,
   gender: ["male", "female"],
-  inventory: ["product"] as const,
+  inventory: ["product", "inventory"] as const,
   unitProfiles: ["tenant", "buyer"] as const,
   models: [
     "user",

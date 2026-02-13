@@ -21,7 +21,6 @@ class StoreManger {
       search?: string;
       select?: string;
     };
-    console.log(search);
     if (type) matches.type = type;
     if (subType) matches.subType = subType;
     if (id) matches._id = new mongoose.Types.ObjectId(id);
@@ -46,7 +45,7 @@ class StoreManger {
         subType: store.subType,
       }));
     }
-    console.log(result);
+
     if (id && !result.length) throw new Error("Store not found");
     return id ? result[0] : result;
   }

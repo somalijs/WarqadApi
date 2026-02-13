@@ -3,6 +3,7 @@ import Enums from "../../../func/Enums.js";
 import { ExpressRequest } from "../../../types/Express.js";
 import { ClientSession } from "mongoose";
 import ProductManager from "./ProductManager.js";
+import InventoryManager from "./InventoryManger.js";
 
 const schema = z.object({
   inventory: z.enum(Enums.inventory),
@@ -22,9 +23,16 @@ const InventoryBox = async ({
     req,
     session,
   });
+  const Inventory = new InventoryManager({
+    req,
+    session,
+  });
   switch (inventory) {
     case "product":
       response = await Product[method]();
+      break;
+    case "inventory":
+      response = await Inventory[method]();
       break;
     default:
       throw new Error("Invalid inventory type");

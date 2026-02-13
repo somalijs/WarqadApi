@@ -3,7 +3,7 @@ import getProductModel, {
   ProductDocument,
 } from "../../../models/inventory/Product.js";
 import { ExpressRequest } from "../../../types/Express.js";
-import ProductSchema from "./schema.js";
+import ProductSchema, { itemsSchema } from "./schema.js";
 import addLogs from "../../../services/Logs.js";
 import mongoose from "mongoose";
 import { getProducts } from "./helpers/GetProduct.js";
@@ -13,6 +13,8 @@ import {
   uploadFile,
 } from "../../../services/Files/upload/UploadFile.js";
 import { v4 as uuidV4 } from "uuid";
+
+import getInventoryModel from "../../../models/inventory/Inventory.js";
 type Props = {
   req: ExpressRequest;
   session?: ClientSession;
@@ -30,7 +32,7 @@ class ProductManager {
   }
 
   async get() {
-    const { id, search, store }: any = this.req.query;
+    const { id, search, store, type }: any = this.req.query;
     const matches: any = {
       isDeleted: false,
     };
@@ -42,31 +44,81 @@ class ProductManager {
       }
       matches.$or = or;
     }
+    if (type) matches.type = type;
 
     if (id) matches._id = new mongoose.Types.ObjectId(id);
     if (store) matches.store = new mongoose.Types.ObjectId(store);
-
-    // Date filtering if needed
-    // if (from && to) {
-    //   const { starts, ends } = getDateRange({ from, to });
-    //   matches.createdAt = { $gte: starts.toDate(), $lte: ends.toDate() };
-    // }
 
     const data = await getProducts({
       matches,
       Model: this.Model,
     });
+    let resData = data;
 
-    return id ? data[0] : data;
+    if (["pressure", "bag"].includes(type)) {
+      const items = await getProductModel(this.req.db!).find({
+        type: "item",
+      });
+      resData = resData.map((item: any) => {
+        return {
+          ...item,
+          items: item.items.map((item: any) => {
+            return {
+              ...item,
+              data: items.find(
+                (i: any) => String(i._id) === String(item.product),
+              ),
+            };
+          }),
+        };
+      });
+    }
+    return id ? resData[0] : resData;
   }
 
   async add() {
     const body = ProductSchema.parse(this.req.body);
-
-    const createData = {
+    const { type, category, brand } = body;
+    const createData: any = {
       ...body,
       by: this.req.by!,
     };
+    if (["pressure", "bag"].includes(type)) {
+      const { items } = itemsSchema.parse(this.req.body);
+      createData.items = items.map((item: any) => {
+        return {
+          ...item,
+          total: item.quantity * item.cost,
+        };
+      });
+      createData.cost = createData.items.reduce(
+        (acc: number, item: any) => acc + item.total,
+        0,
+      );
+    }
+    if (category) {
+      const isCategory = await getInventoryModel(this.req.db!)
+        .findOne({
+          _id: category,
+          type: "category",
+          isDeleted: false,
+        })
+        .session(this?.session || null);
+      if (!isCategory)
+        throw new Error(`Category of id (${category}) not found`);
+      createData.category = isCategory._id;
+    }
+    if (brand) {
+      const isBrand = await getInventoryModel(this.req.db!)
+        .findOne({
+          _id: brand,
+          type: "brand",
+          isDeleted: false,
+        })
+        .session(this?.session || null);
+      if (!isBrand) throw new Error(`Brand of id (${brand}) not found`);
+      createData.brand = isBrand._id;
+    }
     const files = this.req.files as Express.Multer.File[];
 
     const created = await this.Model.create([createData], {
@@ -100,27 +152,65 @@ class ProductManager {
     const { id } = this.req.query;
     if (!id) throw new Error("Product id is required");
     const body = ProductSchema.parse(this.req.body);
-
+    const { category, brand } = body;
     const isExist = await this.Model.findOne({
       _id: id,
       isDeleted: false,
     }).session(this?.session || null);
     if (!isExist) throw new Error(`Product of id (${id}) not found`);
 
-    const oldData = {
+    const oldData: any = {
       name: isExist.name,
       unit: isExist.unit,
       unitQty: isExist.unitQty,
       cost: isExist.cost,
     };
 
-    const newData = {
+    const newData: any = {
       name: body.name,
       unit: body.unit,
       unitQty: body.unitQty,
       cost: body.cost,
     };
-
+    if (["pressure", "bag"].includes(body.type)) {
+      const { items } = itemsSchema.parse(this.req.body);
+      newData.items = items.map((item: any) => {
+        return {
+          ...item,
+          total: item.quantity * item.cost,
+        };
+      });
+      newData.cost = newData.items.reduce(
+        (acc: number, item: any) => acc + item.total,
+        0,
+      );
+      oldData.items = isExist.items;
+    }
+    if (category) {
+      const isCategory = await getInventoryModel(this.req.db!)
+        .findOne({
+          _id: category,
+          type: "category",
+          isDeleted: false,
+        })
+        .session(this?.session || null);
+      if (!isCategory)
+        throw new Error(`Category of id (${category}) not found`);
+      newData.category = isCategory._id;
+      oldData.category = isExist.category;
+    }
+    if (brand) {
+      const isBrand = await getInventoryModel(this.req.db!)
+        .findOne({
+          _id: brand,
+          type: "brand",
+          isDeleted: false,
+        })
+        .session(this?.session || null);
+      if (!isBrand) throw new Error(`Brand of id (${brand}) not found`);
+      newData.brand = isBrand._id;
+      oldData.brand = isExist.brand;
+    }
     if (JSON.stringify(oldData) === JSON.stringify(newData)) {
       throw new Error("No changes made");
     }

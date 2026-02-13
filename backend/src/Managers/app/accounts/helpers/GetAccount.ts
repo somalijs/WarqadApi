@@ -62,7 +62,17 @@ export async function getAccounts({
                         $and: [
                           { $eq: [profile, "broker"] },
                           {
-                            $eq: ["$adjustmentType", "customer-broker-invoice"],
+                            $or: [
+                              {
+                                $eq: [
+                                  "$adjustmentType",
+                                  "customer-broker-invoice",
+                                ],
+                              },
+                              {
+                                $eq: ["$houseInvoice", "sale"],
+                              },
+                            ],
                           },
                         ],
                       },
@@ -149,6 +159,30 @@ export async function getAccounts({
                   default: {
                     $ifNull: ["$details.description", "$amount"],
                   },
+                },
+              },
+            },
+          },
+          {
+            $addFields: {
+              label: {
+                $switch: {
+                  branches: [
+                    {
+                      case: {
+                        $and: [
+                          { $eq: [profile, "broker"] },
+                          {
+                            $eq: ["$houseInvoice", "sale"],
+                          },
+                        ],
+                      },
+                      then: {
+                        $concat: ["Commission - ", "$label"],
+                      },
+                    },
+                  ],
+                  default: "$label",
                 },
               },
             },

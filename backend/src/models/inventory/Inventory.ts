@@ -17,7 +17,6 @@ const inventorySchema = new Schema(
     store: {
       type: Schema.Types.ObjectId,
       ref: "Store",
-      required: true,
     },
     isDeleted: {
       type: Boolean,

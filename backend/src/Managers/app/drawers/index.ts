@@ -55,6 +55,7 @@ class DrawerManager {
       },
       {
         $addFields: {
+          originalName: "$name",
           name: {
             $concat: ["$name", " (", "$currency", ")"],
           },
@@ -283,10 +284,13 @@ class DrawerManager {
       ...base,
     };
     // check if store exists
-    const store = await getStoreModel(this.db)
-      .findById(createData.store)
-      .session(this?.session || null);
-    if (!store) throw new Error(`Store of id (${createData.store}) not found`);
+    if (base.store) {
+      const store = await getStoreModel(this.db)
+        .findById(createData.store)
+        .session(this?.session || null);
+      if (!store)
+        throw new Error(`Store of id (${createData.store}) not found`);
+    }
     const created = await this.Model.create(
       [{ ...createData, by: this.req.by! }],
       { session: this?.session || null },
@@ -340,12 +344,15 @@ class DrawerManager {
       restricted: base.restricted,
       currency: base.currency,
     };
-
+    if (base.store) {
+      newData.store = String(base.store);
+      oldData.store = String(isExist.store);
+    }
     // check if data changed
     if (JSON.stringify(oldData) === JSON.stringify(newData)) {
       throw new Error("No changes made");
     }
-    newData.store = isExist.store;
+
     // replace the document
     const updated = await this.Model.findOneAndReplace(
       { _id: isExist._id },

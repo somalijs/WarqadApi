@@ -23,6 +23,6 @@ export const itemsSchema = z.object({
 export const inventorySchema = z.object({
   name: z.string().trim().toLowerCase().min(2),
   type: z.enum(["brand", "category"]),
-  store: z.string(),
+  store: z.string().optional(),
 });
 export default ProductSchema;

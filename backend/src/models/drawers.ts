@@ -14,7 +14,7 @@ const drawerSchema = new Schema(
     store: {
       type: Schema.Types.ObjectId,
       ref: "Store",
-      required: [true, "Store is required"],
+      //   required: [true, "Store is required"],
     },
     type: {
       type: String,

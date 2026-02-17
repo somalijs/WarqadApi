@@ -33,6 +33,7 @@ const AccountSchema = {
       })
       .optional(),
   }),
+  finance: z.object({}),
   shop: z.object({}),
   store: z.object({}),
   employee: z.object({

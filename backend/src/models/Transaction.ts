@@ -188,6 +188,17 @@ const transactionSchema = new Schema(
         return this.type === "journal";
       },
     },
+    journal: {
+      type: String,
+      enum: Enums.journal,
+      default: "pay",
+    },
+    finance: {
+      type: bySchema,
+      required: function (this: any) {
+        return this.profile === "finance";
+      },
+    },
     sarif: {
       type: bySchema,
       required: function (this: any) {

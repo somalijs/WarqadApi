@@ -48,7 +48,9 @@ const TransactionSchema = {
   customer: z.object({
     customer: zodFields.objectId("customer"),
   }),
-
+  finance: z.object({
+    finance: zodFields.objectId("finance"),
+  }),
   supplier: z.object({
     supplier: zodFields.objectId("supplier"),
   }),
@@ -69,6 +71,7 @@ const TransactionSchema = {
       "stock-sale",
       "stock-adjustment",
       "payments",
+      "journal-manager",
     ]),
   }),
   shop: z.object({

@@ -6,7 +6,7 @@ const base = z.object({
   date: zodFields.date,
   note: z.string().optional(),
   store: zodFields.objectId("Store"),
-  profile: z.enum(["customer", "supplier", "employee", "shop"]),
+  profile: z.enum(["customer", "supplier", "employee", "shop", "finance"]),
   journalType: z.enum(Enums.journalTypes),
   amount: z.number().min(0),
   description: z.string(),

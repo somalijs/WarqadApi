@@ -192,7 +192,16 @@ export async function getKaramaAccounts({
           },
         },
 
-        name: { $concat: ["$name", " (", "$currency", ")"] },
+        name: {
+          $concat: [
+            "$name",
+            " (",
+            {
+              $ifNull: ["$currency", ""],
+            },
+            ")",
+          ],
+        },
       },
     },
     {

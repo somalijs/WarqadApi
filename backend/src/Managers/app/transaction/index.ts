@@ -30,6 +30,7 @@ import getStocksModel from "../../../models/Stocks.js";
 import getProductModel from "../../../models/inventory/Product.js";
 import Payment from "./payment/Payment.js";
 import { getDateRange } from "../../../func/Date.js";
+import journalManager from "./journals/journalManager.js";
 
 type Props = {
   db: string;
@@ -69,6 +70,7 @@ class TransactionManager {
       from,
       to,
       currency,
+      journal,
     }: any = this.req.query;
     const matches: any = {};
     if (free !== "true") {
@@ -83,6 +85,7 @@ class TransactionManager {
 
       matches.$or = or;
     }
+    if (journal) matches.journal = journal;
     if (id) matches._id = new mongoose.Types.ObjectId(id!);
     if (invoiceList) matches.invoiceList = invoiceList;
     if (type) matches.type = type;
@@ -438,6 +441,13 @@ class TransactionManager {
         break;
       case "journal":
         result = await journalBox({
+          req: this.req,
+          ref: refNo,
+          session: this.session!,
+        });
+        break;
+      case "journal-manager":
+        result = await journalManager({
           req: this.req,
           ref: refNo,
           session: this.session!,

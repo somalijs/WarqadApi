@@ -4,9 +4,10 @@ import { z } from "zod";
 import InventoryBox from "../../Managers/app/inventory/Inventory.js";
 import mongoose from "mongoose";
 import { handleTransactionError } from "../../func/Errors.js";
+import mapengoStockController from "../../Managers/app/mapengo/stocks/index.js";
 
 const schema = z.object({
-  type: z.enum(["inventory"]),
+  type: z.enum(["inventory", "mapengo-stock"]),
 });
 const appManager = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
@@ -23,9 +24,14 @@ const appManager = expressAsyncHandler(
             session,
           });
           break;
-
+        case "mapengo-stock":
+          resData = await mapengoStockController({
+            req,
+            session,
+          });
+          break;
         default:
-          throw new Error("Invalid typea");
+          throw new Error("Invalid type");
       }
       await session.commitTransaction();
 

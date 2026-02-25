@@ -2,12 +2,23 @@ const storeEnums = {
   retail: ["electronics", "clothes", "pharmacy", "cars", "shoes", "grocery"],
   services: ["travel agency", "real estate", "invoice manager"],
   website: ["static", "business", "e-commerce"],
+  store: ["store"],
 };
 const Enums = {
   roles: ["admin", "manager", "staff"],
   productTypes: ["item", "pressure", "bag"] as const,
   gender: ["male", "female"],
   inventory: ["product", "inventory"] as const,
+  stockTypes: ["bag", "pressure", "item"] as const,
+  stockTransferTypes: [
+    "pressure to item",
+    "item",
+    "bag to item",
+    "bag",
+    "pressure",
+  ] as const,
+  bags: ["bag", "pressure"] as const,
+  invoiceTypes: ["cash", "invoice"] as const,
   unitProfiles: ["tenant", "buyer"] as const,
   models: [
     "user",
@@ -36,7 +47,7 @@ const Enums = {
   ],
   storeEnums: storeEnums,
   storeTypes: Object.keys(storeEnums) as Array<keyof typeof storeEnums>,
-  StoreType: ["retail", "services", "website"] as const,
+  StoreType: ["retail", "services", "website", "store"] as const,
   // retailTypes: ['grocery', 'clothing', 'shoes', 'electronics'],
 
   taxTypes: ["exclusive", "inclusive"],
@@ -70,6 +81,7 @@ const Enums = {
     "purchase",
     "sale",
     "stock-adjustment",
+    "mapengo-stock-adjustment",
   ] as const,
   saleTypes: ["stock-sale"] as const,
   saleProfiles: ["customer", "shop"] as const,

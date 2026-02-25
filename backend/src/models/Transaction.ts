@@ -13,6 +13,16 @@ const transactionSchema = new Schema(
       enum: Enums.transactionTypes,
       required: [true, "Transaction type is required"],
     },
+    stockType: {
+      type: String,
+      enum: Enums.stockTypes,
+      required: [
+        function (this: any) {
+          return ["mapengo-stock-adjustment"].includes(this.type);
+        },
+        "stock type is required",
+      ],
+    },
     transaction: {
       type: Schema.Types.ObjectId,
       ref: "Transaction",
@@ -213,6 +223,9 @@ const transactionSchema = new Schema(
           this.adjustmentType === "employee-invoice"
         );
       },
+    },
+    account: {
+      type: bySchema,
     },
     broker: {
       type: bySchema,

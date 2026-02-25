@@ -24,6 +24,14 @@ const stocksSchema = new Schema(
       ref: "Transaction",
       required: [true, "Transaction is required"],
     },
+    from: {
+      type: Schema.Types.ObjectId,
+      ref: "Store",
+    },
+    to: {
+      type: Schema.Types.ObjectId,
+      ref: "Store",
+    },
   },
   {
     timestamps: true,

@@ -99,6 +99,9 @@ const houseInvoice = async ({
     if (!isTenant) {
       throw new Error("Tenant not found");
     }
+    if (isTenant.endDate) {
+      throw new Error("Tenant already moved");
+    }
     transactionData.details = rentDetails;
     transactionData.currency = "KSH";
     customerId = isTenant.customer;

@@ -30,8 +30,17 @@ class RealStateManager {
   }
 
   async get() {
-    const { id, customer, store, floor, no, search, profile, date }: any =
-      this.req.query;
+    const {
+      id,
+      customer,
+      store,
+      floor,
+      no,
+      search,
+      profile,
+      date,
+      moved,
+    }: any = this.req.query;
 
     const matches: any = {};
     matches.isDeleted = false;
@@ -40,7 +49,7 @@ class RealStateManager {
     if (customer)
       matches.customer = new mongoose.Types.ObjectId(customer as string);
     if (store) matches.store = new mongoose.Types.ObjectId(store as string);
-    if (floor) matches.floor = Number(floor);
+    if (floor) matches.floor = floor; // Floor is a string in schema
     if (no) matches.no = no;
     const transactionMatches: any = {};
     if (date) {
@@ -48,17 +57,8 @@ class RealStateManager {
 
       transactionMatches.dateObj = { $lte: ends };
     }
-
+    if (moved === "false") matches.endDate = { $exists: false };
     // Search logic handled after lookup to include customer fields
-    if (search) {
-      const or: any[] = [{ name: { $regex: search, $options: "i" } }];
-
-      if (mongoose.Types.ObjectId.isValid(search)) {
-        or.push({ _id: new mongoose.Types.ObjectId(search) });
-      }
-
-      matches.$or = or;
-    }
     const data = await this.Model.aggregate([
       { $match: matches },
       {
@@ -85,6 +85,7 @@ class RealStateManager {
                     },
                   },
                   { no: { $regex: search, $options: "i" } },
+                  { floor: { $regex: search, $options: "i" } },
                   ...(mongoose.Types.ObjectId.isValid(search)
                     ? [{ _id: new mongoose.Types.ObjectId(search) }]
                     : []),

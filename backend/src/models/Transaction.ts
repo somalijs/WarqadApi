@@ -23,6 +23,16 @@ const transactionSchema = new Schema(
         "stock type is required",
       ],
     },
+    stockTransferType: {
+      type: String,
+      enum: Enums.stockTransferTypes,
+      required: [
+        function (this: any) {
+          return ["mapengo-stock-transfer"].includes(this.type);
+        },
+        "stock transfer type is required",
+      ],
+    },
     transaction: {
       type: Schema.Types.ObjectId,
       ref: "Transaction",
@@ -151,13 +161,13 @@ const transactionSchema = new Schema(
     from: {
       type: bySchema,
       function(this: any) {
-        return ["money-transfer"].includes(this.type);
+        return ["money-transfer", "mapengo-stock-transfer"].includes(this.type);
       },
     },
     to: {
       type: bySchema,
       function(this: any) {
-        return ["money-transfer"].includes(this.type);
+        return ["money-transfer", "mapengo-stock-transfer"].includes(this.type);
       },
     },
     by: { type: bySchema, required: [true, "Creator is required"] },

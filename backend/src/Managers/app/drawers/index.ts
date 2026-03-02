@@ -37,13 +37,13 @@ class DrawerManager {
     if (type) matches.type = type;
     if (store) matches.store = new mongoose.Types.ObjectId(store!);
     if (currency) matches.currency = currency;
-    if (this.req?.role !== "admin") {
-      matches.store = {
-        $in: (this.req?.storeIds || []).map(
-          (item) => new mongoose.Types.ObjectId(item),
-        ),
-      };
-    }
+    // if (this.req?.role !== "admin") {
+    //   matches.store = {
+    //     $in: (this.req?.storeIds || []).map(
+    //       (item) => new mongoose.Types.ObjectId(item),
+    //     ),
+    //   };
+    // }
     const transactionMatches: any = {};
     if (from && to) {
       const { starts, ends } = getDateRange({ from, to });

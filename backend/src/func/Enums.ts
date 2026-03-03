@@ -83,6 +83,7 @@ const Enums = {
     "stock-adjustment",
     "mapengo-stock-adjustment",
     "mapengo-stock-transfer",
+    "mapengo-stock-sale",
   ] as const,
   saleTypes: ["stock-sale"] as const,
   saleProfiles: ["customer", "shop"] as const,

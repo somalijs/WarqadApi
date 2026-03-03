@@ -63,6 +63,12 @@ const Payment = async ({
   if (!accountDoc) {
     throw new Error(`${profile} of id (${accountId}) not found`);
   }
+  let description;
+  if (profile === "customer") {
+    description = `Payment ${action === "debit" ? "Received from" : "Paid to"} ${profile}`;
+  } else {
+    description = `Payment ${action === "debit" ? "Paid to" : "Received from"} ${profile}`;
+  }
   const createData: any = {
     date,
     store,
@@ -78,7 +84,7 @@ const Payment = async ({
       name: accountDoc.name,
     },
     details: {
-      description: `Payment ${action === "debit" ? "Received from" : "Paid to"} ${profile}`,
+      description,
     },
     by: req.by!,
   };

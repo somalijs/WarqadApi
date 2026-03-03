@@ -13,6 +13,7 @@ const transferBase = z.object({
   from: zodFields.objectId("store id"),
   to: zodFields.objectId("store id"),
   stockTransferType: z.enum(Enums.stockTransferTypes),
+  stockType: z.enum(Enums.stockTypes),
 });
 const saleBase = z.object({
   date: zodFields.date,
@@ -57,7 +58,7 @@ const saleStocks = z.object({
   stocks: z
     .array(
       z.object({
-        item: zodFields.objectId("item id"),
+        product: zodFields.objectId("product id"),
         quantity: z.number().gt(0, "Quantity must be greater than 0"),
         cost: z.number().gt(0, "Cost must be greater than 0"),
         sell: z.number().gt(0, "Sell must be greater than 0"),

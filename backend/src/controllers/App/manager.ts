@@ -5,9 +5,10 @@ import InventoryBox from "../../Managers/app/inventory/Inventory.js";
 import mongoose from "mongoose";
 import { handleTransactionError } from "../../func/Errors.js";
 import mapengoStockController from "../../Managers/app/mapengo/stocks/index.js";
+import mapengoAccountsController from "../../Managers/app/mapengo/accounts/reports/index.js";
 
 const schema = z.object({
-  type: z.enum(["inventory", "mapengo-stock"]),
+  type: z.enum(["inventory", "mapengo-stock", "mapengo-accounts"]),
 });
 const appManager = expressAsyncHandler(
   async (req: ExpressRequest, res: ExpressResponse) => {
@@ -26,6 +27,12 @@ const appManager = expressAsyncHandler(
           break;
         case "mapengo-stock":
           resData = await mapengoStockController({
+            req,
+            session,
+          });
+          break;
+        case "mapengo-accounts":
+          resData = await mapengoAccountsController({
             req,
             session,
           });

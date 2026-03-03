@@ -59,6 +59,9 @@ const stockAdjustment = async ({ req, session, ref }: Props) => {
   const transaction = create[0];
 
   if (["bag", "pressure"].includes(stockType)) {
+    if (isStore.type !== "store") {
+      throw new Error(`Only stores can have ${stockType}s`);
+    }
     const stocksData: any = await Promise.all(
       stocks.map(async (stock: any, index: number) => {
         const isItem = await Product.findOne({

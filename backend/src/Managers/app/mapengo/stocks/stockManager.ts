@@ -7,6 +7,10 @@ import z from "zod";
 import getProductModel from "../../../../models/inventory/Product.js";
 import stocklevel from "./stocklevel.js";
 import ProductReport from "./ProductReport.js";
+import stockTransfer from "./transfer.js";
+import SaleStock from "./sale.js";
+import stockBalance from "./stockBalance.js";
+import profitAndLoss from "./profitAndLoss.js";
 
 type props = {
   req: ExpressRequest;
@@ -52,6 +56,20 @@ class StockManager {
           ref: refNo,
         });
         break;
+      case "transfer":
+        resCreate = await stockTransfer({
+          req: this.req,
+          session: this.session!,
+          ref: refNo,
+        });
+        break;
+      case "sale":
+        resCreate = await SaleStock({
+          req: this.req,
+          session: this.session!,
+          ref: refNo,
+        });
+        break;
       default:
         throw new Error(`Invalid stock type ${stockType}`);
     }
@@ -59,10 +77,13 @@ class StockManager {
     return resCreate;
   }
   async get() {
-    const { date, type, id } = this.req.query;
+    const { date, id, type, store } = this.req.query;
     const matches: any = {
       isDeleted: false,
     };
+    if (store) {
+      matches.store = new mongoose.Types.ObjectId(store as string);
+    }
     if (date) {
       matches.date = date;
     }
@@ -72,6 +93,7 @@ class StockManager {
     if (id) {
       matches._id = new mongoose.Types.ObjectId(id as string);
     }
+
     const Products = await getProductModel(this.req.db!).find().lean();
     const Transaction = getTransactionModel(this.req.db!);
     const get = await Transaction.aggregate([
@@ -83,7 +105,15 @@ class StockManager {
           from: "stocks",
           localField: "_id",
           foreignField: "transaction",
+          let: { stockType: "$stockType" },
           pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$type", "$$stockType"],
+                },
+              },
+            },
             {
               $lookup: {
                 from: "products",
@@ -98,6 +128,7 @@ class StockManager {
                 preserveNullAndEmptyArrays: true,
               },
             },
+
             {
               $addFields: {
                 name: "$data.name",
@@ -145,6 +176,12 @@ class StockManager {
   }
   async productReport() {
     return await ProductReport({ req: this.req });
+  }
+  async stockBalance() {
+    return await stockBalance({ req: this.req });
+  }
+  async profitAndLoss() {
+    return await profitAndLoss({ req: this.req });
   }
 }
 

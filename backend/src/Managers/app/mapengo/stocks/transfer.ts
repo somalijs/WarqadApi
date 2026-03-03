@@ -12,9 +12,8 @@ type Props = {
   ref: string;
 };
 const stockTransfer = async ({ req, session, ref }: Props) => {
-  const { from, to, stockTransferType, date } = StockSchema.transferBase.parse(
-    req.body,
-  );
+  const { from, to, stockTransferType, date, stockType } =
+    StockSchema.transferBase.parse(req.body);
   const { stocks } = StockSchema.stocksItem.parse(req.body);
   const amount = stocks.reduce(
     (acc, stock) => acc + stock.cost * stock.quantity,
@@ -43,6 +42,7 @@ const stockTransfer = async ({ req, session, ref }: Props) => {
     ref,
     type: "mapengo-stock-transfer",
     date,
+    stockType,
     action: "credit",
     details: {
       description: `Stock transfer from ${isFrom.name} to ${isTo.name}`,
@@ -110,7 +110,7 @@ const stockTransfer = async ({ req, session, ref }: Props) => {
       itemsStocks.map(async (item: any) => {
         const stockData: any = {
           type: "item",
-          product: item.item,
+          product: item.product,
           transaction: transaction._id,
           quantity: item.quantity,
           cost: item.cost,
@@ -200,6 +200,7 @@ const stockTransfer = async ({ req, session, ref }: Props) => {
         const stockData: any = {
           type: stockType,
           product: isItem?._id,
+          cost: isItem.cost,
           transaction: transaction._id,
           quantity: stockType === "pressure" ? 1 : stock.quantity,
         };

@@ -8,6 +8,11 @@ const stocksSchema = new Schema(
       ref: "Product",
       required: [true, "Product is required"],
     },
+    type: {
+      type: String,
+      enum: ["item", "bag", "pressure"],
+      default: "item",
+    },
     quantity: {
       type: Number,
       required: [true, "Quantity is required"],

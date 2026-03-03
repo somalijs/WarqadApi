@@ -36,6 +36,7 @@ const ProductReport = async ({ req }: { req: ExpressRequest }) => {
   }
   const isItem = await Product.findOne({
     _id: id,
+    type,
     isDeleted: false,
   });
   if (!isItem) {
@@ -55,7 +56,6 @@ const ProductReport = async ({ req }: { req: ExpressRequest }) => {
           {
             $match: {
               isDeleted: false,
-              stockType: type,
             },
           },
         ],

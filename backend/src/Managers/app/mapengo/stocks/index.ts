@@ -4,7 +4,14 @@ import StockManager from "./stockManager.js";
 import { ClientSession } from "mongoose";
 
 const schema = z.object({
-  method: z.enum(["create", "get", "stockLevel", "productReport"]),
+  method: z.enum([
+    "create",
+    "get",
+    "stockLevel",
+    "productReport",
+    "stockBalance",
+    "profitAndLoss",
+  ]),
 });
 
 const mapengoStockController = async ({

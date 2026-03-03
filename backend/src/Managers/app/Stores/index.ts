@@ -14,15 +14,20 @@ class StoreManger {
   // create get
   async get(req: ExpressRequest) {
     let matches: Record<string, unknown> = { isDeleted: false };
-    const { type, subType, id, search, select } = req.query as {
+    const { type, subType, id, search, select, nostore } = req.query as {
       type?: string;
       subType?: string;
       id?: string;
       search?: string;
       select?: string;
+      nostore?: string;
     };
     if (type) matches.type = type;
     if (subType) matches.subType = subType;
+    if (nostore === "true")
+      matches.type = {
+        $ne: "store",
+      };
     if (id) matches._id = new mongoose.Types.ObjectId(id);
     if (search) {
       const or: any[] = [{ name: { $regex: search, $options: "i" } }];

@@ -23,6 +23,16 @@ const transactionSchema = new Schema(
         "stock type is required",
       ],
     },
+    saleType: {
+      type: String,
+      enum: Enums.invoiceTypes,
+      required: [
+        function (this: any) {
+          return ["mapengo-sale-type"].includes(this.type);
+        },
+        "sale invoice type is required",
+      ],
+    },
     stockTransferType: {
       type: String,
       enum: Enums.stockTransferTypes,

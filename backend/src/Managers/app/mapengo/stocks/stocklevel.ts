@@ -51,7 +51,6 @@ const stocklevel = async ({ req }: { req: ExpressRequest }) => {
         pipeline: [
           {
             $match: {
-              stockType: type,
               isDeleted: false,
             },
           },
@@ -98,12 +97,30 @@ const stocklevel = async ({ req }: { req: ExpressRequest }) => {
         total: { $sum: "$balance" },
       },
     },
-
+    {
+      $lookup: {
+        from: "products",
+        localField: "_id",
+        pipeline: [
+          {
+            $match: {
+              type: type,
+            },
+          },
+        ],
+        foreignField: "_id",
+        as: "pp",
+      },
+    },
+    {
+      $unwind: "$pp",
+    },
     // Lookup Item/Bag details
     {
       $lookup: {
         from: "products",
         localField: "_id",
+
         foreignField: "_id",
         as: "details",
       },

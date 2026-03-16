@@ -17,7 +17,7 @@ const getToken = async <T extends object & { decoded: string }>({
       token = parts[1];
     }
   }
-
+  console.log(token);
   if (!token && throwError) {
     throw new Error("Keys are missing");
   }

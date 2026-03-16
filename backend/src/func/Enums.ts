@@ -29,6 +29,8 @@ const Enums = {
     "employee",
     "drawer",
     "package",
+    "property",
+    "propertyUnit",
   ],
   logActions: [
     "create",
@@ -97,5 +99,9 @@ const Enums = {
     "drawer-adjustment",
   ] as const,
   action: ["credit", "debit"] as const,
+  propertyTypes: ["house", "apartment", "land", "commercial", "villa"] as const,
+  propertyStatus: ["available", "sold", "rented", "pending"] as const,
+  listingTypes: ["sale", "rent", "both"] as const,
+  rentPeriods: ["daily", "weekly", "monthly", "yearly"] as const,
 };
 export default Enums;

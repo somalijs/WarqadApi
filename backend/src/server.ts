@@ -7,7 +7,8 @@ import v1Routes from "./v1Routes.js";
 
 import path from "path";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
-
+import http from "http";
+import { Server } from "socket.io";
 const __dirname = path.resolve();
 dotenv.config();
 export const dbName = process.env.DB_NAME as string;
@@ -45,10 +46,39 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set("trust proxy", true);
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const regex = /^https?:\/\/([a-zA-Z0-9-]+\.)*warqad\.com$/;
+      if (
+        regex.test(origin) ||
+        (allowedOrigins && allowedOrigins.includes(origin))
+      ) {
+        return callback(null, true);
+      }
+      if (process.env.NODE_ENV === "production")
+        return callback(new Error("Not allowed"), false);
+      else return callback(null, true);
+    },
+    credentials: true,
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
 v1Routes(app);
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 if (process.env.NODE_ENV === "production") {
@@ -65,3 +95,4 @@ if (process.env.NODE_ENV === "production") {
 
 app.use(notFound);
 app.use(errorHandler);
+export { io };

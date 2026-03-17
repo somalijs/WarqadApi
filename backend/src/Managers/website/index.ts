@@ -15,6 +15,9 @@ const schema = z.object({
     "addUnit",
     "updateUnit",
     "deleteUnit",
+    "coverImage",
+    "images",
+    "deleteImage",
   ]),
 });
 

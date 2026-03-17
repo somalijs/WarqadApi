@@ -9,6 +9,9 @@ import deleteUnit from "./deleteUnit.js";
 import getProperties from "./get.js";
 import findProperty from "./find.js";
 import findUnit from "./findUnit.js";
+import coverImage from "./coverImage.js";
+import propertyImages from "./images.js";
+import deleteImage from "./deleteImage.js";
 
 type props = {
   req: ExpressRequest;
@@ -54,6 +57,16 @@ class PropertiesManager {
 
   async deleteUnit() {
     return await deleteUnit({ req: this.req, session: this.session });
+  }
+
+  async coverImage() {
+    return await coverImage({ req: this.req, session: this.session });
+  }
+  async images() {
+    return await propertyImages({ req: this.req, session: this.session });
+  }
+  async deleteImage() {
+    return await deleteImage({ req: this.req, session: this.session });
   }
 }
 

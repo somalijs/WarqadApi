@@ -58,10 +58,16 @@ export const propertyUnitCreateSchema = z.object({
   isFeatured: z.boolean().optional(),
 });
 
-export const propertyUnitUpdateSchema = propertyUnitCreateSchema.partial().extend({
-  id: z.string().min(1, "Unit ID is required"),
-});
+export const propertyUnitUpdateSchema = propertyUnitCreateSchema
+  .partial()
+  .extend({
+    id: z.string().min(1, "Unit ID is required"),
+  });
 
 export const propertyUnitDeleteSchema = z.object({
   id: z.string().min(1, "Unit ID is required"),
+});
+
+export const coverImageSchema = z.object({
+  property: z.string().min(1, "Property ID is required"),
 });

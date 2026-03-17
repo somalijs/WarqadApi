@@ -21,7 +21,10 @@ export const propertyCreateSchema = z.object({
       .optional(),
   }),
   amenities: z.array(z.string()).optional(),
-  isFeatured: z.boolean().optional(),
+  isFeatured: z
+    .string()
+    .transform((val) => (val === "true" ? true : false))
+    .optional(),
 });
 
 export const propertyUpdateSchema = propertyCreateSchema.partial().extend({

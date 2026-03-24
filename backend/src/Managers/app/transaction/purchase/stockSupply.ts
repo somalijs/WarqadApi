@@ -123,8 +123,11 @@ const stockSupply = async ({
         });
       }
       if (productDoc.cost !== newCost) {
-        productDoc.cost = newCost;
-        await productDoc.save({ session });
+        await getProductModel(req.db!).updateOne(
+          { _id: productDoc._id },
+          { $set: { cost: newCost } },
+          { session },
+        );
       }
 
       return {

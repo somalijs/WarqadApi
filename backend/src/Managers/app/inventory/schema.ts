@@ -12,7 +12,7 @@ const ProductSchema = z.object({
   unitQty: z.coerce.number().default(1),
   cost: z.coerce.number().default(0),
   store: z.string().optional(),
-  type: z.enum(Enums.productTypes),
+  type: z.enum(Enums.productTypes).default("item"),
   category: z.string().optional(),
   brand: z.string().optional(),
 });
